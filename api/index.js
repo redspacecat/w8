@@ -1,6 +1,5 @@
 const path = require("path");
 const api = require("../api.js");
-console.log("hello world")
 
 const app = require("fastify")({
     ignoreTrailingSlash: true,

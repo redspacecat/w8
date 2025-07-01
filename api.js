@@ -8,21 +8,27 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 let api = {};
 
 api.test = async function (request, reply) {
-    console.log(request.query.name);
-    const { data } = await supabase.from("sites").select().eq("site_name", request.query.name);
-    console.log(data);
-    reply.send(data);
+    reply.send("ok");
 };
 
 api.getSite = async function (request, reply) {
     let data
     let everything = {}
     let usedCache = false
+    let dirPrepend
+    if (process.env.NODE_ENV == "dev") {
+        dirPrepend = ""
+        console.log("dev")
+    } else {
+        dirPrepend = "/"
+        console.log("prod")
+    }
+
     try {
         if (request.query.new == "true") {
             throw {code: "ENOENT"}
         }
-        data = fs.readFileSync(/*__dirname + */"/tmp/siteCache.json");
+        data = fs.readFileSync(dirPrepend + "tmp/siteCache.json");
         console.log("using cached data")
         everything = JSON.parse(data)
         data = everything[request.params.name]
@@ -46,7 +52,7 @@ api.getSite = async function (request, reply) {
     everything[request.params.name] = data
     if (!usedCache) {
         console.log("writing cache", everything)
-        fs.writeFileSync(/*__dirname + */"/tmp/siteCache.json", JSON.stringify(everything), {flag: "w"})
+        fs.writeFileSync(dirPrepend + "tmp/siteCache.json", JSON.stringify(everything), {flag: "w"})
     } else {
         console.log("not writing cache")
     }

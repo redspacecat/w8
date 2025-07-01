@@ -21,6 +21,7 @@ async function main() {
     });
 
     app.get("/", api.page("main"));
+    app.get("/test", api.test)
 
     app.listen({ port: process.env.PORT, host: "0.0.0.0" }, function (err, address) {
         if (err) {

@@ -12,8 +12,18 @@ api.test = async function (request, reply) {
 };
 
 api.getSite = async function (request, reply) {
+    let siteName = request.params.name
+    let sitePath = request.url.slice(siteName.length + 3)
+    if (sitePath == "") {
+        // sitePath = "/"
+        return reply.redirect(`/s/${siteName}/`)
+    }
+    console.log("siteName", siteName)
+    console.log("sitePath", sitePath)
+    // reply.send(sitePath)
+
     let data
-    let everything = {}
+    let cache = {}
     let usedCache = false
     let dirPrepend
     if (process.env.NODE_ENV == "dev") {
@@ -30,8 +40,8 @@ api.getSite = async function (request, reply) {
         }
         data = fs.readFileSync(dirPrepend + "tmp/siteCache.json");
         console.log("using cached data")
-        everything = JSON.parse(data)
-        data = everything[request.params.name]
+        cache = JSON.parse(data)
+        data = cache[siteName]
         usedCache = true
     } catch (err) {
         if (err.code === "ENOENT") {
@@ -40,8 +50,8 @@ api.getSite = async function (request, reply) {
             } else {
                 console.log("site cache not found");
             }
-            console.log(request.params.name);
-            data = await supabase.from("sites").select().eq("site_name", request.params.name);
+            // console.log("siteName", siteName);
+            data = await supabase.from("sites").select().eq("site_name", siteName);
             data = data.data
             console.log("requested updated data", data)
         } else {
@@ -49,16 +59,66 @@ api.getSite = async function (request, reply) {
         }
     }
 
-    everything[request.params.name] = data
+    cache[siteName] = data
     if (!usedCache) {
-        console.log("writing cache", everything)
-        fs.writeFileSync(dirPrepend + "tmp/siteCache.json", JSON.stringify(everything), {flag: "w"})
+        console.log("writing cache", cache)
+        fs.writeFileSync(dirPrepend + "tmp/siteCache.json", JSON.stringify(cache), {flag: "w"})
     } else {
         console.log("not writing cache")
     }
 
+    let pages = data[0].site_data
+    let b = {pages: pages, reply: reply}
+    if (sitePath == "/" && pages["index.html"]) {
+        // reply.status(200).type("text/html").send(pages["index.html"])
+        return returnPage(b, "text/html", "index.html")
+    } else if (pages[sitePath]) {
+        // reply.status(200).type("text/html").send(pages[sitePath])
+        let type
+        switch (true) {
+            case sitePath.endsWith(".css"):
+                type = "text/css"
+                break
+            case sitePath.endsWith(".js"):
+                type = "application/javascript"
+                break
+            case sitePath.endsWith(".html"):
+                type = "text/html"
+                break
+            default:
+                break
+        }
+        return returnPage(b, type, sitePath)
+    } else if (pages[sitePath.slice(1)]) {
+        // reply.status(200).type("text/html").send(pages[sitePath.slice(1)])
+        let type
+        switch (true) {
+            case sitePath.endsWith(".css"):
+                type = "text/css"
+                break
+            case sitePath.endsWith(".js"):
+                type = "application/javascript"
+                break
+            case sitePath.endsWith(".html"):
+                type = "text/html"
+                break
+            default:
+                break
+        }
+        return returnPage(b, type, sitePath.slice(1))
+    } else if (pages[sitePath + ".html"]) {
+        // reply.status(200).type("text/html").send(pages[sitePath + ".html"])
+        return returnPage(b, "text/html", sitePath + ".html")
+    } else {
+        reply.status(404).send("404 Not Found")
+    }
+
     reply.send(data)
 };
+
+function returnPage(b, type, path) {
+    b.reply.status(200).type(type).send(b.pages[path])
+}
 
 api.page = function (p) {
     return function (request, reply) {

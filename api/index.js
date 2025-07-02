@@ -1,3 +1,5 @@
+import fastify from "fastify";
+
 const path = require("path");
 const api = require("../api.js");
 
@@ -21,8 +23,11 @@ async function main() {
     });
 
     app.get("/", api.page("main"));
-    app.get("/test", api.test)
-    app.get("/s/:name", api.getSite)
+    app.get("/test", api.test);
+
+    ["/s/:name/*", "/s/:name"].forEach((path) => {
+        app.get(path, api.getSite);
+    });
 
     app.listen({ port: process.env.PORT, host: "0.0.0.0" }, function (err, address) {
         if (err) {

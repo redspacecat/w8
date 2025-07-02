@@ -39,10 +39,15 @@ api.getSite = async function (request, reply) {
             throw {code: "ENOENT"}
         }
         data = fs.readFileSync(dirPrepend + "tmp/siteCache.json");
-        console.log("using cached data")
+        console.log("using cached data", data)
         cache = JSON.parse(data)
+        console.log(cache)
         data = cache[siteName]
-        usedCache = true
+        if (data) {
+            usedCache = true
+        } else {
+            throw {code: "ENOENT"}
+        }
     } catch (err) {
         if (err.code === "ENOENT") {
             if (request.query.new == "true") {
@@ -52,6 +57,7 @@ api.getSite = async function (request, reply) {
             }
             // console.log("siteName", siteName);
             data = await supabase.from("sites").select().eq("site_name", siteName);
+            console.log("test", data)
             data = data.data
             console.log("requested updated data", data)
         } else {
@@ -67,8 +73,10 @@ api.getSite = async function (request, reply) {
         console.log("not writing cache")
     }
 
+    console.log(data)
     let pages = data[0].site_data
     let b = {pages: pages, reply: reply}
+    // console.log(sitePath + ".html")
     if (sitePath == "/" && pages["index.html"]) {
         // reply.status(200).type("text/html").send(pages["index.html"])
         return returnPage(b, "text/html", "index.html")
@@ -109,6 +117,9 @@ api.getSite = async function (request, reply) {
     } else if (pages[sitePath + ".html"]) {
         // reply.status(200).type("text/html").send(pages[sitePath + ".html"])
         return returnPage(b, "text/html", sitePath + ".html")
+    } else if (pages[sitePath.slice(1) + ".html"]) {
+        // reply.status(200).type("text/html").send(pages[sitePath + ".html"])
+        return returnPage(b, "text/html", sitePath.slice(1) + ".html")
     } else {
         reply.status(404).send("404 Not Found")
     }

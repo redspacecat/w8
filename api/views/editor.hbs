@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Site</title>
+
+    <script src="js/codemirror/cm6.bundle.min.js"></script>
+    <script src="js/files.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+
+        :root {
+            --hierarchy-width: 50px;
+        }
+
+        body {
+            margin: 0;
+            font-family: Rubik, Arial, sans-serif;
+        }
+
+        #editor {
+            width: 45%;
+            height: calc(100vh - 50px - 4px);
+            vertical-align: bottom;
+            border: 2px solid rgb(80, 80, 80);
+        }
+
+        #wrapper {
+            display: flex;
+        }
+
+        #preview {
+            border: 2px solid rgb(80, 80, 80);
+            border-left: none;
+            width: 35%;
+            height: calc(100vh - 50px - 4px);
+
+            flex: 1;
+            /* adjust automatically */
+            min-width: 0;
+            /* allow flexing beyond auto width */
+            overflow: hidden;
+            /* hide overflow on small width */
+        }
+
+        #files {
+            width: 20%;
+            border: 2px solid black;
+            border-right: none;
+            border-left: none;
+        }
+
+        .cm-editor {
+            height: 100%;
+        }
+
+        .cm-editor .cm-diagnosticSource {
+            display: none;
+        }
+
+        .cm-editor .cm-diagnosticText {
+            font-size: small;
+        }
+
+        .slider,
+        .slider2 {
+            line-height: 100%;
+            width: 10px;
+            background-color: #dee2e6;
+            border: none;
+            cursor: col-resize;
+            user-select: none;
+            /* disable selection */
+            text-align: center;
+            /* visibility: hidden; */
+            opacity: 0;
+        }
+
+        #files,
+        #editor {
+            min-width: 0px;
+        }
+
+        #newFile {
+            position: absolute;
+            width: var(--hierarchy-width);
+            height: 40px;
+        }
+
+        #newFile {
+    /* Positioning and Sizing */
+    position: relative; /* Changed from absolute for better flow within #files */
+    width: calc(100% - 10px); /* Adjust width to fit with padding */
+    height: 40px;
+    margin: 5px; /* Add some margin for spacing */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+
+    /* Typography */
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff; /* White text */
+
+    /* Background and Border */
+    background-color: #007bff; /* A standard blue for a primary action */
+    border: none;
+    border-radius: 5px; /* Slightly rounded corners */
+
+    /* Alignment */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Cursor and Transition */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth transitions for hover effects */
+}
+
+#newFile:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+#newFile:active {
+    transform: translateY(1px); /* Slight press effect when clicked */
+}
+
+/* Optional: Adjust the hierarchy div to account for the button's new positioning */
+#hierarchy {
+    padding-top: 0; /* Remove top padding if it conflicts with the button's margin */
+}
+    </style>
+    <link rel="stylesheet" href="css/files.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div style="height: 50px;height: 50px;display: flex;align-items: center;justify-content: center;">
+        <span style="font-size: large;">Make a Cool Site</span>
+    </div>
+
+    <div id="wrapper">
+        <div id="files">
+            <button id="newFile" onclick="newFile()">+ New File</button>
+            <div id="hierarchy"></div>
+        </div>
+        <div class="slider2" style="position: absolute;left: calc(20% - 3px);height: calc(100vh - 50px);z-index: 9999;">
+            S<br>l<br>i<br>d<br>e<br>r</div>
+        <div id="editor"></div>
+        <div class="slider" style="position: absolute;left: calc(65% - 3px);height: calc(100vh - 50px);">
+            S<br>l<br>i<br>d<br>e<br>r</div>
+        <iframe id="preview"></iframe>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        const initialState = cm6.createEditorState()
+        const view = cm6.createEditorView(initialState, document.getElementById("editor"));
+    </script>
+</body>
+
+</html>

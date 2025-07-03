@@ -1,0 +1,42 @@
+#hierarchy {
+    font-family: FontAwesome, Rubik, Arial, sans-serif;
+    margin-left: -20px;
+    /* margin-top: 40px; */
+    overflow: scroll;
+    height: calc(100vh - 50px - 4px - 50px);
+}
+
+.foldercontainer,
+.file,
+.noitems {
+    display: block;
+    padding: 5px 5px 2px 30px;
+}
+
+.folder {
+    color: green;
+}
+
+.file {
+    color: darkslategray;
+}
+
+.folder,
+.file {
+    cursor: pointer;
+}
+
+.noitems {
+    display: none;
+    pointer-events: none;
+}
+
+.folder:hover,
+.file:hover {
+    background: lightyellow;
+}
+
+.folder:before,
+.file:before {
+    padding-right: 10px;
+}

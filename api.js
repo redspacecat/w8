@@ -81,7 +81,7 @@ api.getSite = async function (request, reply) {
 
     console.log(data);
     let pages = data[0].site_data;
-    let b = { pages: pages, reply: reply, siteName: siteName };
+    let b = { pages: pages, reply: reply, request: request, siteName: siteName, lastModified: data[0].lastModified};
     // console.log(sitePath + ".html")
     if (sitePath == "/" && pages["index.html"]) {
         // reply.status(200).type("text/html").send(pages["index.html"])
@@ -135,8 +135,8 @@ api.getSite = async function (request, reply) {
 
 function returnPage(b, type, path) {
     if (type == "text/html") {
-        let dom = new DOMParser().parseFromString(b.pages[path], "text/html");
-        let els = dom.querySelectorAll("link, a, script");
+        let dom = new JSDOM(b.pages[path]);
+        let els = dom.window.document.querySelectorAll("link, a, script");
         for (let el of els) {
             let attr = el.tagName == "SCRIPT" ? "src" : "href";
             if (el[attr]) {
@@ -145,9 +145,9 @@ function returnPage(b, type, path) {
                 }
             }
         }
-        b.reply.status(200).type(type).send(dom.documentElement.outerHTML);
+        b.reply.status(200).type(type).header("Cache-Control", "max-age=604800").send(dom.serialize());
     } else {
-        b.reply.status(200).type(type).send(b.pages[path]);
+        b.reply.status(200).type(type).header("Cache-Control", "max-age=604800").send(b.pages[path]);
     }
 }
 

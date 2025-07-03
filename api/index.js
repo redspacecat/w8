@@ -32,7 +32,7 @@ async function main() {
     app.get("/app/create", api.page("editor"));
 
     app.setNotFoundHandler(function (request, reply) {
-        reply.send("404 Not Found")
+        reply.code(404).send("404 Not Found")
     })
 
     app.listen({ port: process.env.PORT, host: "0.0.0.0" }, function (err, address) {

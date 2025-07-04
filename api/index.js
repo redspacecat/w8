@@ -29,7 +29,7 @@ async function main() {
         app.get(path, api.getSite);
     });
 
-    app.get("/app/create", api.page("editor"));
+    app.get("/app/editor", api.page("editor"));
 
     app.setNotFoundHandler(function (request, reply) {
         reply.code(404).send("404 Not Found")

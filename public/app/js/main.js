@@ -14,7 +14,7 @@ let files = {
 }`,
     "js/main.js": `window.addEventListener("click", function() {
     alert("Hi, world!");
-})`
+})`,
 };
 let currentFile = Object.keys(files)[0];
 
@@ -28,14 +28,21 @@ window.addEventListener("resize", function () {
     document.documentElement.style.setProperty("--hierarchy-width", getComputedStyle(document.querySelector("#files")).width);
 });
 
-window.addEventListener("message", function(msg, origin) {
-    console.log(msg, origin)
+window.addEventListener("message", function (msg, origin) {
+    console.log(msg, origin);
     if (msg.data.loadPage) {
-        loadPage(msg.data.loadPage)
+        loadPage(msg.data.loadPage);
     }
-})
+});
+
+function getRandomInt(min, max) {
+    const minCeiled = Math.ceil(min);
+    const maxFloored = Math.floor(max);
+    return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled); // The maximum is exclusive and the minimum is inclusive
+}
 
 function setup() {
+    document.querySelector("#site-name").value = `new-site-${getRandomInt(1, 100000)}`;
     createHierarchy(files);
     loadFile(currentFile);
     createSite();
@@ -43,7 +50,7 @@ function setup() {
 }
 
 function createSite() {
-    loadPage("index.html")
+    loadPage("index.html");
 }
 
 function loadPage(path) {
@@ -57,7 +64,7 @@ function loadPage(path) {
                 el.setAttribute(attr, el.getAttribute(attr).slice(1));
             }
             if (el.tagName == "A") {
-               el[attr] = `javascript:window.top.postMessage({loadPage: \`${el.getAttribute(attr)}\`}, "*")`
+                el[attr] = `javascript:window.top.postMessage({loadPage: \`${el.getAttribute(attr)}\`}, "*")`;
             } else {
                 let fileBlob = new Blob([files[el.getAttribute(attr)]], { type: el.getAttribute(attr).endsWith(".css") ? "text/css" : el.getAttribute(attr).endsWith(".js") ? "application/javascript" : "text/html" });
                 el[attr] = URL.createObjectURL(fileBlob);
@@ -173,17 +180,17 @@ function newFile() {
         confirmButtonText: "Create",
         preConfirm: function (path) {
             if (path.startsWith("/")) {
-                path = path.slice(1)
+                path = path.slice(1);
             }
             if (!path) {
-                Swal.showValidationMessage("A file name is required")
+                Swal.showValidationMessage("A file name is required");
             }
             if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js")) {
-                files[path] = ""
-                saveFile()
-                currentFile = path
-                loadFile(currentFile)
-                createHierarchy(files)
+                files[path] = "";
+                saveFile();
+                currentFile = path;
+                loadFile(currentFile);
+                createHierarchy(files);
             } else {
                 Swal.showValidationMessage("Only .html, .css, and .js file formats supported");
             }

@@ -1,5 +1,3 @@
-import fastify from "fastify";
-
 const path = require("path");
 const api = require("../api.js");
 

@@ -109,19 +109,25 @@ let preview = document.querySelector("#preview");
 let slider = document.querySelector(".slider");
 let slider2 = document.querySelector(".slider2");
 
+function getProp(el, prop) {
+    return parseFloat(getComputedStyle(el)[prop].replace("px", ""))
+}
+
 slider.onmousedown = function dragMouseDown(e) {
     let dragX = e.clientX;
     preview.style.pointerEvents = "none";
     document.onmousemove = function onMouseMove(e) {
-        if (parseFloat(getComputedStyle(slider).left.replace("px", "")) - parseFloat(getComputedStyle(slider2).left.replace("px", "")) > 100) {
-            block.style.width = parseFloat(getComputedStyle(block).width.replace("px", "")) + e.clientX - dragX + "px";
-            slider.style.left = parseFloat(getComputedStyle(slider).left.replace("px", "")) + e.clientX - dragX + "px";
+        if (getProp(slider, "left") - getProp(slider2, "left") > 100) {
+            block.style.width = getProp(block, "width") + e.clientX - dragX + "px";
+            slider.style.left = getProp(slider, "left") + e.clientX - dragX + "px";
             dragX = e.clientX;
         } else if (e.clientX - dragX > 0) {
-            block.style.width = parseFloat(getComputedStyle(block).width.replace("px", "")) + e.clientX - dragX + "px";
-            slider.style.left = parseFloat(getComputedStyle(slider).left.replace("px", "")) + e.clientX - dragX + "px";
+            block.style.width = getProp(block, "width") + e.clientX - dragX + "px";
+            slider.style.left = getProp(slider, "left") + e.clientX - dragX + "px";
             dragX = e.clientX;
         }
+        // block.style.width = `${getProp(block, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
+        // slider.style.left = block.style.width
     };
     // remove mouse-move listener on mouse-up
     document.onmouseup = function () {
@@ -133,19 +139,21 @@ slider.onmousedown = function dragMouseDown(e) {
 slider2.onmousedown = function dragMouseDown(e) {
     let dragX = e.clientX;
     document.onmousemove = function onMouseMove(e) {
-        if (parseFloat(getComputedStyle(slider).left.replace("px", "")) - parseFloat(getComputedStyle(slider2).left.replace("px", "")) > 100) {
-            block2.style.width = parseFloat(getComputedStyle(block2).width.replace("px", "")) + e.clientX - dragX + "px";
+        if (getProp(slider, "left") - getProp(slider2, "left") > 100) {
+            block2.style.width = getProp(block2, "width") + e.clientX - dragX + "px";
             document.documentElement.style.setProperty("--hierarchy-width", block2.style.width);
-            block.style.width = parseFloat(getComputedStyle(block).width.replace("px", "")) - (e.clientX - dragX) + "px";
-            slider2.style.left = parseFloat(getComputedStyle(slider2).left.replace("px", "")) + e.clientX - dragX + "px";
+            block.style.width = getProp(block, "width") - (e.clientX - dragX) + "px";
+            slider2.style.left = getProp(slider2, "left") + e.clientX - dragX + "px";
             dragX = e.clientX;
         } else if (e.clientX - dragX < 0) {
-            block2.style.width = parseFloat(getComputedStyle(block2).width.replace("px", "")) + e.clientX - dragX + "px";
+            block2.style.width = getProp(block2, "width") + e.clientX - dragX + "px";
             document.documentElement.style.setProperty("--hierarchy-width", block2.style.width);
-            block.style.width = parseFloat(getComputedStyle(block).width.replace("px", "")) - (e.clientX - dragX) + "px";
-            slider2.style.left = parseFloat(getComputedStyle(slider2).left.replace("px", "")) + e.clientX - dragX + "px";
+            block.style.width = getProp(block, "width") - (e.clientX - dragX) + "px";
+            slider2.style.left = getProp(slider2, "left") + e.clientX - dragX + "px";
             dragX = e.clientX;
         }
+        // block2.style.width = `${getProp(block2, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
+        // block.style.width = `${getProp(block, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
     };
     // remove mouse-move listener on mouse-up
     document.onmouseup = function () {

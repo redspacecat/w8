@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/app/css/main.css">
+    <title>w8 — Deploy</title>
+</head>
+
+<body>
+    <h2 style="text-align: center;">Deploy Your Site</h2>
+    <p>Name: <span id="name"></span></p>
+    <p>Files: <span id="files"></span></p>
+    <script type="module">
+        var replacements = { '\\\\': '\\', '\\n': '\n', '\\"': '"' };
+
+        function slashUnescape(contents) {
+            return contents.replace(/\\(\\|n|")/g, function (replace) {
+                return replacements[replace];
+            });
+        }
+
+        const data = await(await fetch(`blob:${window.location.origin}/${window.location.hash.slice(1)}`)).json()
+        document.querySelector("#name").innerText = data.name
+        document.querySelector("#files").innerText = slashUnescape(JSON.stringify(data.files))
+    </script>
+</body>
+
+</html>

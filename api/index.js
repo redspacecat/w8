@@ -19,6 +19,8 @@ async function main() {
         },
         root: path.join(__dirname, "views"),
     });
+
+    // app.register(require('@fastify/formbody'))
     
     app.get("/", api.page("main"));
     app.get("/test", api.test);
@@ -28,6 +30,7 @@ async function main() {
     });
 
     app.get("/app/editor", api.page("editor"));
+    app.get("/app/deploy", api.page("deploy"))
 
     app.setNotFoundHandler(function (request, reply) {
         reply.code(404).send("404 Not Found")

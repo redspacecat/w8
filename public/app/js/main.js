@@ -43,6 +43,7 @@ function getRandomInt(min, max) {
 
 function setup() {
     document.querySelector("#site-name").value = `new-site-${getRandomInt(1, 100000)}`;
+    document.querySelector(".deployButton").addEventListener("click", handleDeploy);
     createHierarchy(files);
     loadFile(currentFile);
     createSite();
@@ -110,7 +111,7 @@ let slider = document.querySelector(".slider");
 let slider2 = document.querySelector(".slider2");
 
 function getProp(el, prop) {
-    return parseFloat(getComputedStyle(el)[prop].replace("px", ""))
+    return parseFloat(getComputedStyle(el)[prop].replace("px", ""));
 }
 
 slider.onmousedown = function dragMouseDown(e) {
@@ -204,4 +205,21 @@ function newFile() {
             }
         },
     });
+}
+
+function handleDeploy(e) {
+    e.preventDefault();
+    // submitPost("/app/deploy", {name: document.querySelector("#site-name").value, data: JSON.stringify(files)})
+    // let deployWindow = window.open("/app/deploy", "_blank")
+    // deployWindow.addEventListener("DOMContentLoaded", function() {
+    //     deployWindow.document.getElementById("name").innerText = document.querySelector("#site-name").value
+    //     deployWindow.document.getElementById("files").innerText = JSON.stringify(files)
+    // })
+    saveFile();
+    window.open(
+        `/app/deploy#${URL.createObjectURL(new Blob([JSON.stringify({files: files, name: document.querySelector("#site-name").value})], { type: "application/json" }))
+            .split("/")
+            .at(-1)}`,
+        "_blank"
+    );
 }

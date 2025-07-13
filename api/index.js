@@ -31,6 +31,7 @@ async function main() {
 
     app.get("/app/editor", api.page("editor"));
     app.get("/app/deploy", api.page("deploy"))
+    app.post("/app/deploy", api.deploy)
 
     app.setNotFoundHandler(function (request, reply) {
         reply.code(404).send("404 Not Found")

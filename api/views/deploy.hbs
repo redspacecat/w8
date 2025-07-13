@@ -7,6 +7,16 @@
     <title>w8 — Deploy</title>
     <!-- Tailwind CSS CDN for easy styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css">
+    <!-- Default theme -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/themes/default.min.css">
+
     <style>
         /* Apply Inter font to the body */
         body {
@@ -202,16 +212,28 @@
             // Placeholder for actual deployment logic
             console.log('Deploy button clicked! Initiating deployment for:', document.querySelector("#name").value);
 
-            fetch("/app/deploy", {
-                method: "POST",
-                body: JSON.stringify({ name: data.name, files: slashUnescape(JSON.stringify(data.files)) })
-            }).then(result => result.text()).then(text => {
-                alert(text)
+            (async function () {
+                let response = await fetch("/app/deploy", {
+                    method: "POST",
+                    body: JSON.stringify({ name: document.querySelector("#name").value, files: data.files }),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
                 loader.classList.remove('active'); // Hide the loader
                 deployButton.style.display = 'block'; // Show the button (or flex/inline-block if needed)
-                console.log('Deployment process completed.');
-            })
-        });
+                if (response.ok) {
+                    console.log('Deployment process completed.');
+                    let n = document.querySelector("#name").value
+                    alertify.alert(`Your site has been deployed successfully! You can find it at <a href='/s/${n}' style='color: blue;'>${window.location.origin}/s/${n}</a>`).set({ "title": "Deployment completed" }).set({ "movable": false });
+                } else {
+                    console.log("Error deploying")
+                    let result = await response.text()
+                    alertify.alert(`There was an error while deploying your site — Status code: ${response.status}, Info: ${result}`).set({ "title": "Deployment failed" }).set({ "movable": false });
+                }
+                //alert(text)
+            })()
+        })
     </script>
 </body>
 

@@ -158,4 +158,22 @@ api.page = function (p) {
     };
 };
 
+api.deploy = async function (request, reply) {
+    if (!request.body.name || !request.body.files) {
+        return reply.code(400).send("Malformed request")
+    }
+    let name = request.body.name
+    let data = await supabase.from("sites").select().eq("site_name", name);
+    // console.log(data)
+    if (data.data[0]) {
+        return reply.code(409).send("A site with that name already exists")
+    }
+    console.log("adding data", name, "with data", request.body.files)
+    console.time("addSite")
+    await supabase.from("sites").insert([{site_name: name, site_data: request.body.files}])
+    console.log("added data for site", name)
+    console.timeEnd("addSite")
+    return reply.code(200).send("Done!")
+}
+
 module.exports = api;

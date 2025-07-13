@@ -8,6 +8,7 @@
 
     <script src="js/codemirror/cm6.bundle.min.js"></script>
     <script src="js/files.js" defer></script>
+    <script src="js/main.js"></script>
     <link rel="stylesheet" href="/app/css/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 
@@ -171,7 +172,7 @@
 <body>
     <div style="height: 50px;height: 50px;display: flex;align-items: center;margin-left: 10px;">
         <span style="font-size: large;margin-right: 10px;">w8 | Create Your Site</span>
-        <input id="site-name" placeholder="Your site name..." value="newsite" style="font-size: large">
+        <input id="site-name" placeholder="Your site name..." value="" style="font-size: large" pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');" maxlength="40">
         <a href="/app/deploy" class="deployButton">Deploy</a>
     </div>
 
@@ -188,7 +189,7 @@
         <iframe id="preview"></iframe>
     </div>
 
-    <script src="js/main.js"></script>
+    <script src="js/editor.js"></script>
     <script>
         const initialState = cm6.createEditorState()
         const view = cm6.createEditorView(initialState, document.getElementById("editor"));

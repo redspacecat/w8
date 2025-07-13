@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{{!-- <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -216,6 +216,257 @@
                 let response = await fetch("/app/deploy", {
                     method: "POST",
                     body: JSON.stringify({ name: document.querySelector("#name").value, files: data.files }),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                loader.classList.remove('active'); // Hide the loader
+                deployButton.style.display = 'block'; // Show the button (or flex/inline-block if needed)
+                if (response.ok) {
+                    console.log('Deployment process completed.');
+                    let n = document.querySelector("#name").value
+                    alertify.alert(`Your site has been deployed successfully! You can find it at <a href='/s/${n}' style='color: blue;'>${window.location.origin}/s/${n}</a>`).set({ "title": "Deployment completed" }).set({ "movable": false });
+                } else {
+                    console.log("Error deploying")
+                    let result = await response.text()
+                    alertify.alert(`There was an error while deploying your site — Status code: ${response.status}, Info: ${result}`).set({ "title": "Deployment failed" }).set({ "movable": false });
+                }
+                //alert(text)
+            })()
+        })
+    </script>
+</body>
+
+</html> --}}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>w8 — Deploy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/themes/default.min.css">
+
+    <style>
+        /* Apply Inter font to the body */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            /* Use flexbox for centering content */
+            flex-direction: column;
+            /* Stack items vertically */
+            align-items: center;
+            /* Center horizontally */
+            min-height: 100vh;
+            /* Ensure body takes full viewport height */
+            margin: 0;
+            background-color: #f0f2f5;
+            /* Light background for better contrast */
+        }
+
+        /* Keyframes for the spinning loader animation */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Loader styling - made bigger and transparent background */
+        .loader {
+            border: 6px solid transparent;
+            /* Changed border color to transparent */
+            border-left-color: #3b82f6;
+            /* Blue color for the spinner */
+            border-radius: 50%;
+            width: 40px;
+            /* Increased width */
+            height: 40px;
+            /* Increased height */
+            animation: spin 1s linear infinite;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Show loader when active */
+        .loader.active {
+            display: block;
+        }
+
+        /* Container for button and loader to maintain position */
+        .button-loader-container {
+            min-width: 200px;
+            /* Set a min-width to prevent collapse when button is hidden */
+            min-height: 60px;
+            /* Set a min-height to prevent collapse when button is hidden (approx button height) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ajs-dialog {
+            translate: 0 50%;
+        }
+    </style>
+</head>
+
+<body class="p-4 pt-16">
+    <h2 class="text-3xl font-bold text-gray-800 mb-[7rem]">Deploy Your Site</h2>
+    <div class="bg-white p-8 rounded-xl shadow-lg mb-8 max-w-md w-full">
+        <div class="flex flex-col items-start mb-4 w-full">
+            <div class="flex items-center w-full mb-1">
+                <label for="name" class="text-lg text-gray-700 mr-2">Name:</label>
+                <input type="text" id="name" placeholder="The name for your site"
+                    class="flex-grow text-lg p-2 rounded-lg border border-gray-300 shadow-sm outline-none transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    pattern="[a-zA-Z0-9_\-]*"
+                    oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, ''); updateCharCount();"
+                    maxlength="40" minlength="1" required>
+                </div>
+            <span id="charCount" class="text-sm text-gray-500 self-end mr-1">0/40</span>
+        </div>
+
+        <div class="mb-4 w-full">
+            <label for="password" class="text-lg text-gray-700">Optional Password:</label>
+            <input type="password" id="password"
+                class="w-full text-lg p-2 rounded-lg border border-gray-300 shadow-sm outline-none transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 mt-1"
+                placeholder="Enter password (optional)" maxlength="60">
+            <span class="text-sm text-gray-500 mt-1 block">This password will allow you to edit/delete your site
+                later.</span>
+        </div>
+
+        <div class="flex items-center justify-center mb-4">
+            <span class="text-lg text-gray-700 mr-2">Website Size:</span>
+            <span id="size" class="font-semibold text-gray-900 text-lg"></span>
+        </div>
+    </div>
+
+    <div class="button-loader-container">
+        <button id="deployButton" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl rounded-full shadow-lg
+                        hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl transform hover:scale-105 transition-all duration-300
+                        focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-75 active:scale-95">
+            Deploy Now
+        </button>
+
+        <div id="loader" class="loader"></div>
+    </div>
+
+    <script>
+        // Function to redirect to home
+        function home() {
+            //document.body.innerHTML = "<h3 class='text-2xl font-semibold text-gray-700'>Redirecting...</h3>";
+            //window.location.href = "/";
+        }
+
+        /**
+         * Format bytes as human-readable text.
+         *
+         * @param bytes Number of bytes.
+         * @param si True to use metric (SI) units, aka powers of 1000. False to use
+         * binary (IEC), aka powers of 1024.
+         * @param dp Number of decimal places to display.
+         *
+         * @return Formatted string.
+         */
+        function humanFileSize(bytes, si = false, dp = 1) {
+            const thresh = si ? 1000 : 1024;
+
+            if (Math.abs(bytes) < thresh) {
+                return bytes + ' B';
+            }
+
+            const units = si
+                ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+                : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+            let u = -1;
+            const r = 10 ** dp;
+
+            do {
+                bytes /= thresh;
+                ++u;
+            } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+            return bytes.toFixed(dp) + ' ' + units[u];
+        }
+
+        // Function to update the character count display
+        function updateCharCount() {
+            const nameInput = document.getElementById('name');
+            const charCountSpan = document.getElementById('charCount');
+            const currentLength = nameInput.value.length;
+            const maxLength = nameInput.maxLength;
+            charCountSpan.textContent = `${currentLength}/${maxLength}`;
+        }
+
+        var replacements = { '\\\\': '\\', '\\n': '\n', '\\"': '"' };
+
+        function slashUnescape(contents) {
+            return contents.replace(/\\(\\|n|")/g, function (replace) {
+                return replacements[replace];
+            });
+        }
+
+        // Main async function to load data
+        (async function () {
+            if (!window.location.hash) {
+                home();
+            } else {
+                try {
+                    // Fetch data from the blob URL
+                    window.data = await (await fetch(`blob:${window.location.origin}/${window.location.hash.slice(1)}`)).json();
+                } catch (error) {
+                    // Log error and redirect if fetch fails
+                    console.error("Failed to fetch data:", error);
+                    home();
+                }
+                // Populate input field and size display
+                document.querySelector("#name").value = data.name;
+                document.querySelector("#size").innerText = humanFileSize(new File([slashUnescape(JSON.stringify(data.files))], "text/plain").size, true, 2);
+                updateCharCount(); // Update count on initial load
+            }
+        })();
+
+        // Removed the event listener for 'addPasswordButton' as it's no longer needed for toggling
+
+        // Add event listener for the deploy button
+        document.getElementById('deployButton').addEventListener('click', (event) => {
+            const nameInput = document.getElementById('name');
+            const passwordInput = document.getElementById('password');
+
+            // Check if the input is valid before proceeding with deployment
+            if (!nameInput.checkValidity()) {
+                nameInput.reportValidity(); // Show browser's validation message
+                return; // Stop the function if validation fails
+            }
+
+            const deployButton = event.currentTarget;
+            const loader = document.getElementById('loader');
+
+            // Hide the button and show the loader
+            deployButton.style.display = 'none'; // Hide the button
+            loader.classList.add('active'); // Show the loader
+
+            // Get the password value, or an empty string if not provided
+            const password = passwordInput.value;
+
+            // Placeholder for actual deployment logic
+            console.log('Deploy button clicked! Initiating deployment for:', document.querySelector("#name").value);
+            console.log('Optional password:', password);
+
+            (async function () {
+                let response = await fetch("/app/deploy", {
+                    method: "POST",
+                    body: JSON.stringify({ name: document.querySelector("#name").value, files: data.files, password: password }),
                     headers: {
                         "Content-Type": "application/json"
                     }

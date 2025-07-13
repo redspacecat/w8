@@ -5,7 +5,11 @@ const app = require("fastify")({
     ignoreTrailingSlash: true,
 });
 async function main() {
-    await app.register(import("@fastify/rate-limit"), { global: true, max: 30, timeWindow: 60 * 1000 });
+    await app.register(require("@fastify/rate-limit"), {
+        global: true,
+        max: 30,
+        timeWindow: 60 * 1000
+    });
     
     // Setup our static files
     app.register(require("@fastify/static"), {
@@ -31,7 +35,8 @@ async function main() {
 
     app.get("/app/editor", api.page("editor"));
     app.get("/app/deploy", api.page("deploy"))
-    app.post("/app/deploy", api.deploy)
+    app.post("/app/deploy", api.rateLimit(1, 86400000), api.deploy)
+    app.post("/app/edit", api.rateLimit(2, 60000), api.editRequest)
 
     app.setNotFoundHandler(function (request, reply) {
         reply.code(404).send("404 Not Found")

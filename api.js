@@ -4,9 +4,9 @@ const fs = require("fs");
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 // console.timeEnd("login")
 // console.log("resetting...")
-const jsdom = require("jsdom")
-const { JSDOM } = jsdom
-global.DOMParser = new JSDOM().window.DOMParser
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+global.DOMParser = new JSDOM().window.DOMParser;
 
 let api = {};
 
@@ -63,7 +63,7 @@ api.getSite = async function (request, reply) {
             console.log("test", data);
             data = data.data;
             if (!data[0]) {
-                return reply.code(404).send("404 Not Found — That site doesn't exist")
+                return reply.code(404).send("404 Not Found — That site doesn't exist");
             }
             console.log("requested updated data", data);
         } else {
@@ -81,7 +81,7 @@ api.getSite = async function (request, reply) {
 
     console.log(data);
     let pages = data[0].site_data;
-    let b = { pages: pages, reply: reply, request: request, siteName: siteName, lastModified: data[0].lastModified};
+    let b = { pages: pages, reply: reply, request: request, siteName: siteName, lastModified: data[0].lastModified };
     // console.log(sitePath + ".html")
     if (sitePath == "/" && pages["index.html"]) {
         // reply.status(200).type("text/html").send(pages["index.html"])
@@ -159,22 +159,58 @@ api.page = function (p) {
 };
 
 api.deploy = async function (request, reply) {
-    return reply.code(403).send("what are you doing")
+    return reply.code(403).send("Site creations are disabled for now")
     if (!request.body.name || !request.body.files) {
-        return reply.code(400).send("Malformed request")
+        return reply.code(400).send("Malformed request");
     }
-    let name = request.body.name
+    let name = request.body.name;
+    let password = request.body.password || "";
+    if (name.length > 40 || name.length < 1) {
+        return reply.code(400).send("Site name length disallowed");
+    }
+    if (password.length > 40) {
+        return reply.code(400).send("Password too long (limit: 40 characters)");
+    }
+    name = name.replace(/[^a-zA-Z0-9_\-]/g, "");
     let data = await supabase.from("sites").select().eq("site_name", name);
     // console.log(data)
     if (data.data[0]) {
-        return reply.code(409).send("A site with that name already exists")
+        return reply.code(409).send("A site with that name already exists");
     }
-    console.log("adding data", name, "with data", request.body.files)
-    console.time("addSite")
-    await supabase.from("sites").insert([{site_name: name, site_data: request.body.files}])
-    console.log("added data for site", name)
-    console.timeEnd("addSite")
-    return reply.code(200).send("Done!")
-}
+    console.log("adding data", name, "with data", request.body.files);
+    console.time("addSite");
+    await supabase.from("sites").insert([{ site_name: name, site_data: request.body.files, site_password: password || null }]);
+    console.log("added data for site", name);
+    console.timeEnd("addSite");
+    return reply.code(200).send("Done!");
+};
+
+api.rateLimit = function (max, timeWindow) {
+    return {
+        config: {
+            rateLimit: {
+                max: max,
+                timeWindow: timeWindow,
+            },
+        },
+    };
+};
+
+api.editRequest = async function (request, reply) {
+    if (!request.body.siteName || !request.body.sitePass) {
+        return reply.code(400).send("Invalid");
+    } else {
+        let data = await supabase.from("sites").select().eq("site_name", request.body.siteName);
+        if (!data.data[0]) {
+            return reply.code(400).send("That site doesn't exist")
+        } else {
+            if (data.data[0].site_password == request.body.sitePass) {
+                return reply.code(200).send({data: data.data[0].site_data})
+            } else {
+                return reply.code(403).send("Unauthorized")
+            }
+        }
+    }
+};
 
 module.exports = api;

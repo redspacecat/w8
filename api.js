@@ -159,6 +159,7 @@ api.page = function (p) {
 };
 
 api.deploy = async function (request, reply) {
+    return reply.code(403).send("what are you doing")
     if (!request.body.name || !request.body.files) {
         return reply.code(400).send("Malformed request")
     }

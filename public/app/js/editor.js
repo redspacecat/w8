@@ -50,9 +50,8 @@ async function setup() {
     window.edit = params.has("edit");
     if (edit) {
         await sleep(100);
-        let siteName;
         if (params.get("edit")) {
-            siteName = params.get("edit");
+            window.siteName = params.get("edit");
         } else {
             // siteName = prompt("Enter the name of the site to edit")
             await Swal.fire({
@@ -61,7 +60,7 @@ async function setup() {
                 confirmButtonText: "Next",
                 showLoaderOnConfirm: false,
                 preConfirm: (name) => {
-                    siteName = name;
+                    window.siteName = name;
                 },
             });
         }
@@ -72,10 +71,11 @@ async function setup() {
             confirmButtonText: "Edit",
             showLoaderOnConfirm: true,
             preConfirm: async (pass) => {
-                sitePass = pass;
+                window.sitePass = pass;
                 let response = await fetch("/app/edit", {
                     method: "POST",
                     body: JSON.stringify({
+                        action: "check",
                         siteName: siteName,
                         sitePass: sitePass,
                     }),
@@ -88,14 +88,17 @@ async function setup() {
                     let json = JSON.parse(text);
                     files = json.data;
                     document.querySelector("#site-name").value = siteName;
+                    document.querySelector(".deployButton").innerText = "Save Changes";
                 } else {
                     // alert("Error: " + text);
-                    document.querySelector("#site-name").value = `new-site-${getRandomInt(1, 100000)}`;
+                    // window.edit = false
+                    // document.querySelector("#site-name").value = `new-site-${getRandomInt(1, 100000)}`;
                     await Swal.fire({
                         title: "Error",
                         text: text,
                         icon: "error",
                     });
+                    window.location.search = "";
                 }
             },
         });
@@ -266,7 +269,7 @@ function newFile() {
     });
 }
 
-function handleDeploy(e) {
+async function handleDeploy(e) {
     e.preventDefault();
     // submitPost("/app/deploy", {name: document.querySelector("#site-name").value, data: JSON.stringify(files)})
     // let deployWindow = window.open("/app/deploy", "_blank")
@@ -275,10 +278,59 @@ function handleDeploy(e) {
     //     deployWindow.document.getElementById("files").innerText = JSON.stringify(files)
     // })
     saveFile();
-    window.open(
-        `/app/deploy#${URL.createObjectURL(new Blob([JSON.stringify({ files: files, name: document.querySelector("#site-name").value })], { type: "application/json" }))
-            .split("/")
-            .at(-1)}`,
-        "_blank"
-    );
+    if (window.edit) {
+        document.querySelector(".deployButton").innerText = "Saving...";
+        console.log("saving changes");
+        let newName = document.querySelector("#site-name").value;
+        const escapeHtml = (unsafe) => {
+            return unsafe.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+        };
+        if (siteName != newName) {
+            let result = await Swal.fire({
+                title: "Confirm site name change",
+                html: `Are you sure you want to change the name from <b>${escapeHtml(siteName)}</b> to <b>${escapeHtml(newName)}</b>?`,
+                showCancelButton: true,
+                confirmButtonText: "Continue",
+                icon: "question",
+            });
+            if (!result.isConfirmed) {
+                document.querySelector(".deployButton").innerText = "Save Changes";
+                return;
+            }
+        }
+        let response = await fetch("/app/edit", {
+            method: "POST",
+            body: JSON.stringify({
+                action: "deploy",
+                oldName: siteName,
+                newName: newName,
+                files: files,
+                sitePass: sitePass,
+            }),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        document.querySelector(".deployButton").innerText = "Save Changes"
+        if (response.ok) {
+            siteName = newName;
+            Swal.fire({
+                icon: "success",
+                html: `Your site has been updated! You can find the updated version at <a target="_blank" href="/s/${escapeHtml(newName)}">${location.origin}/s/${escapeHtml(newName)}`,
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: await response.text(),
+            });
+        }
+    } else {
+        window.open(
+            `/app/deploy#${URL.createObjectURL(new Blob([JSON.stringify({ files: files, name: document.querySelector("#site-name").value })], { type: "application/json" }))
+                .split("/")
+                .at(-1)}`,
+            "_blank"
+        );
+    }
 }

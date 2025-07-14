@@ -159,7 +159,7 @@ api.page = function (p) {
 };
 
 api.deploy = async function (request, reply) {
-    return reply.code(403).send("Site creations are disabled for now")
+    return reply.code(403).send("Site creations are disabled for now");
     if (!request.body.name || !request.body.files) {
         return reply.code(400).send("Malformed request");
     }
@@ -197,17 +197,39 @@ api.rateLimit = function (max, timeWindow) {
 };
 
 api.editRequest = async function (request, reply) {
-    if (!request.body.siteName || !request.body.sitePass) {
+    if (!request.body.action) {
         return reply.code(400).send("Invalid");
     } else {
-        let data = await supabase.from("sites").select().eq("site_name", request.body.siteName);
-        if (!data.data[0]) {
-            return reply.code(400).send("That site doesn't exist")
-        } else {
-            if (data.data[0].site_password == request.body.sitePass) {
-                return reply.code(200).send({data: data.data[0].site_data})
+        if (request.body.action == "check") {
+            if (!request.body.siteName || !request.body.sitePass) {
+                return reply.code(400).send("Invalid");
+            }
+            let data = await supabase.from("sites").select().eq("site_name", request.body.siteName);
+            if (!data.data[0]) {
+                return reply.code(400).send("That site doesn't exist");
             } else {
-                return reply.code(403).send("Unauthorized")
+                if (data.data[0].site_password == request.body.sitePass) {
+                    return reply.code(200).send({ data: data.data[0].site_data });
+                } else {
+                    return reply.code(403).send("Unauthorized");
+                }
+            }
+        } else if (request.body.action == "deploy") {
+            let data = await supabase.from("sites").select().eq("site_name", request.body.oldName);
+            if (!data.data[0]) {
+                return reply.code(400).send("That site doesn't exist");
+            } else {
+                let data3 = await supabase.from("sites").select().eq("site_name", request.body.newName);
+                if (data3.data[0]) {
+                    return reply.code(400).send("The target site name already exists")
+                }
+                if (data.data[0].site_password == request.body.sitePass) {
+                    let params = request.body;
+                    let data2 = await supabase.from("sites").update({ site_name: params.newName, site_data: params.files }).eq("site_name", params.oldName);
+                    return reply.code(200).send("Updated!")
+                } else {
+                    return reply.code(403).send("Unauthorized");
+                }
             }
         }
     }

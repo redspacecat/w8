@@ -159,7 +159,7 @@ api.page = function (p) {
 };
 
 api.deploy = async function (request, reply) {
-    return reply.code(403).send("Site creations are disabled for now");
+    // return reply.code(403).send("Site creations are disabled for now");
     if (!request.body.name || !request.body.files) {
         return reply.code(400).send("Malformed request");
     }
@@ -168,10 +168,10 @@ api.deploy = async function (request, reply) {
     if (name.length > 40 || name.length < 1) {
         return reply.code(400).send("Site name length disallowed");
     }
+    name = name.replace(/[^a-zA-Z0-9_\-]/g, "");
     if (password.length > 40) {
         return reply.code(400).send("Password too long (limit: 40 characters)");
     }
-    name = name.replace(/[^a-zA-Z0-9_\-]/g, "");
     let data = await supabase.from("sites").select().eq("site_name", name);
     // console.log(data)
     if (data.data[0]) {
@@ -215,18 +215,23 @@ api.editRequest = async function (request, reply) {
                 }
             }
         } else if (request.body.action == "deploy") {
+            let params = request.body;
+            if (params.newName.length > 40 || params.newName.length < 1) {
+                return reply.code(400).send("Site name length disallowed");
+            }
+            params.neawName = params.newName.replace(/[^a-zA-Z0-9_\-]/g, "");
+
             let data = await supabase.from("sites").select().eq("site_name", request.body.oldName);
             if (!data.data[0]) {
                 return reply.code(400).send("That site doesn't exist");
             } else {
                 let data3 = await supabase.from("sites").select().eq("site_name", request.body.newName);
                 if (data3.data[0]) {
-                    return reply.code(400).send("The target site name already exists")
+                    return reply.code(400).send("The target site name already exists");
                 }
                 if (data.data[0].site_password == request.body.sitePass) {
-                    let params = request.body;
                     let data2 = await supabase.from("sites").update({ site_name: params.newName, site_data: params.files }).eq("site_name", params.oldName);
-                    return reply.code(200).send("Updated!")
+                    return reply.code(200).send("Updated!");
                 } else {
                     return reply.code(403).send("Unauthorized");
                 }

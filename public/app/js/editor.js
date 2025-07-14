@@ -62,6 +62,7 @@ async function setup() {
                 preConfirm: (name) => {
                     window.siteName = name;
                 },
+                allowOutsideClick: false,
             });
         }
         console.log(siteName);
@@ -70,6 +71,7 @@ async function setup() {
             input: "text",
             confirmButtonText: "Edit",
             showLoaderOnConfirm: true,
+            allowOutsideClick: false,
             preConfirm: async (pass) => {
                 window.sitePass = pass;
                 let response = await fetch("/app/edit", {
@@ -88,7 +90,7 @@ async function setup() {
                     let json = JSON.parse(text);
                     files = json.data;
                     document.querySelector("#site-name").value = siteName;
-                    document.querySelector(".deployButton").innerText = "Save Changes";
+                    document.querySelector("#deploy-text").innerText = "Save Changes";
                 } else {
                     // alert("Error: " + text);
                     // window.edit = false
@@ -271,6 +273,9 @@ function newFile() {
 
 async function handleDeploy(e) {
     e.preventDefault();
+    if (document.querySelector(".deployButton").dataset.disabled) {
+        return;
+    }
     // submitPost("/app/deploy", {name: document.querySelector("#site-name").value, data: JSON.stringify(files)})
     // let deployWindow = window.open("/app/deploy", "_blank")
     // deployWindow.addEventListener("DOMContentLoaded", function() {
@@ -279,7 +284,6 @@ async function handleDeploy(e) {
     // })
     saveFile();
     if (window.edit) {
-        document.querySelector(".deployButton").innerText = "Saving...";
         console.log("saving changes");
         let newName = document.querySelector("#site-name").value;
         const escapeHtml = (unsafe) => {
@@ -294,10 +298,13 @@ async function handleDeploy(e) {
                 icon: "question",
             });
             if (!result.isConfirmed) {
-                document.querySelector(".deployButton").innerText = "Save Changes";
+                document.querySelector(".deployButton").dataset.disabled = false;
+                document.querySelector("#deploy-text").innerText = "Save Changes";
                 return;
             }
         }
+        document.querySelector("#deploy-text").innerText = "Saving...";
+        document.querySelector(".deployButton").dataset.disabled = true;
         let response = await fetch("/app/edit", {
             method: "POST",
             body: JSON.stringify({
@@ -311,7 +318,10 @@ async function handleDeploy(e) {
                 "Content-Type": "application/json",
             },
         });
-        document.querySelector(".deployButton").innerText = "Save Changes"
+        history.replaceState({}, "", location.origin + location.pathname + `?edit=${newName}`);
+        await sleep(500);
+        document.querySelector(".deployButton").dataset.disabled = false;
+        document.querySelector("#deploy-text").innerText = "Save Changes";
         if (response.ok) {
             siteName = newName;
             Swal.fire({

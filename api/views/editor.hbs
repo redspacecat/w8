@@ -13,7 +13,12 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 
     <style>
-        {{!-- @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap'); --}}
+        {
+                {
+                !-- @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+                --
+            }
+        }
 
         :root {
             --hierarchy-width: 50px;
@@ -21,7 +26,13 @@
 
         body {
             margin: 0;
-            {{!-- font-family: Rubik, Arial, sans-serif; --}}
+
+                {
+                    {
+                    !-- font-family: Rubik, Arial, sans-serif;
+                    --
+                }
+            }
         }
 
         #editor {
@@ -94,75 +105,130 @@
         }
 
         #newFile {
-    /* Positioning and Sizing */
-    position: relative; /* Changed from absolute for better flow within #files */
-    width: calc(100% - 10px); /* Adjust width to fit with padding */
-    height: 40px;
-    margin: 5px; /* Add some margin for spacing */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+            /* Positioning and Sizing */
+            position: relative;
+            /* Changed from absolute for better flow within #files */
+            width: calc(100% - 10px);
+            /* Adjust width to fit with padding */
+            height: 40px;
+            margin: 5px;
+            /* Add some margin for spacing */
+            box-sizing: border-box;
+            /* Include padding and border in the element's total width and height */
 
-    /* Typography */
-    font-size: 1rem;
-    font-weight: 500;
-    color: #ffffff; /* White text */
+            /* Typography */
+            font-size: 1rem;
+            font-weight: 500;
+            color: #ffffff;
+            /* White text */
 
-    /* Background and Border */
-    background-color: #007bff; /* A standard blue for a primary action */
-    border: none;
-    border-radius: 5px; /* Slightly rounded corners */
+            /* Background and Border */
+            background-color: #007bff;
+            /* A standard blue for a primary action */
+            border: none;
+            border-radius: 5px;
+            /* Slightly rounded corners */
 
-    /* Alignment */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+            /* Alignment */
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-    /* Cursor and Transition */
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth transitions for hover effects */
-}
+            /* Cursor and Transition */
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            /* Smooth transitions for hover effects */
+        }
 
-#newFile:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-}
+        #newFile:hover {
+            background-color: #0056b3;
+            /* Darker blue on hover */
+        }
 
-#newFile:active {
-    transform: translateY(1px); /* Slight press effect when clicked */
-}
+        #newFile:active {
+            transform: translateY(1px);
+            /* Slight press effect when clicked */
+        }
 
-/* Styles for the Deploy button, mimicking the New File button */
+        /* Styles for the Deploy button, mimicking the New File button */
         .deployButton {
             /* Basic styling similar to #newFile */
             font-size: 1rem;
             font-weight: 500;
             color: #ffffff;
-            background-color: #28a745; /* A standard green for a success/deploy action */
+            background-color: #28a745;
+            /* A standard green for a success/deploy action */
             border: none;
             border-radius: 5px;
-            height: 40px; /* Match height of newFile button */
-            padding: 0 15px; /* Add horizontal padding */
+            height: 40px;
+            /* Match height of newFile button */
+            padding: 0 15px;
+            /* Add horizontal padding */
             cursor: pointer;
             transition: background-color 0.2s ease, transform 0.1s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-left: auto; /* Pushes the button to the far right within its flex container */
-            margin-right: 10px; /* Add some right margin */
+            margin-left: auto;
+            /* Pushes the button to the far right within its flex container */
+            margin-right: 10px;
+            /* Add some right margin */
             text-decoration: none;
             font-weight: normal;
         }
 
         .deployButton:hover {
-            background-color: #218838; /* Darker green on hover */
+            background-color: #218838;
+            /* Darker green on hover */
         }
 
         .deployButton:active {
-            transform: translateY(1px); /* Slight press effect when clicked */
+            transform: translateY(1px);
+            /* Slight press effect when clicked */
         }
 
-/* Optional: Adjust the hierarchy div to account for the button's new positioning */
-#hierarchy {
-    padding-top: 0; /* Remove top padding if it conflicts with the button's margin */
-}
+        .deployButton[data-disabled="true"] {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+
+        .deployButton[data-disabled="true"] #deploy-loader {
+            display: inline !important;
+        }
+
+        #deploy-loader {
+            width: 22px;
+            height: 22px;
+            margin-right: 7px;
+            margin-left: -7px;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Optional: Adjust the hierarchy div to account for the button's new positioning */
+        #hierarchy {
+            padding-top: 0;
+            /* Remove top padding if it conflicts with the button's margin */
+        }
     </style>
     <link rel="stylesheet" href="css/files.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -172,8 +238,9 @@
 <body>
     <div style="height: 50px;height: 50px;display: flex;align-items: center;margin-left: 10px;">
         <span style="font-size: large;margin-right: 10px;">w8 | Create Your Site</span>
-        <input id="site-name" placeholder="Your site name..." value="" style="font-size: large" pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');" maxlength="40">
-        <a href="/app/deploy" class="deployButton">Deploy</a>
+        <input id="site-name" placeholder="Your site name..." value="" style="font-size: large"
+            pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');" maxlength="40">
+        <a href="/app/deploy" class="deployButton"><span class="loader" id="deploy-loader" style="display: none;"></span><span id="deploy-text">Deploy</span></a>
     </div>
 
     <div id="wrapper">

@@ -10,6 +10,8 @@ async function main() {
         max: 30,
         timeWindow: 60 * 1000
     });
+
+    app.register(require('@fastify/url-data'))
     
     // Setup our static files
     app.register(require("@fastify/static"), {

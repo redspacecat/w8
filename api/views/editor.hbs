@@ -150,6 +150,41 @@
             /* Slight press effect when clicked */
         }
 
+        .deleteButton {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #ffffff;
+            background-color: #a74343;
+            border: none;
+            border-radius: 5px;
+            height: 40px;
+            /* Match height of newFile button */
+            padding: 0 15px;
+            /* Add horizontal padding */
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            /* Pushes the button to the far right within its flex container */
+            margin-right: 10px;
+            /* Add some right margin */
+            text-decoration: none;
+            font-weight: normal;
+            visibility: hidden;
+        }
+
+        .deleteButton:hover {
+            background-color: #a63535;
+            /* Darker red on hover */
+        }
+
+        .deleteButton:active {
+            transform: translateY(1px);
+            /* Slight press effect when clicked */
+        }
+
         /* Styles for the Deploy button, mimicking the New File button */
         .deployButton {
             /* Basic styling similar to #newFile */
@@ -240,6 +275,7 @@
         <span style="font-size: large;margin-right: 10px;">w8 | Create Your Site</span>
         <input id="site-name" placeholder="Your site name..." value="" style="font-size: large"
             pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');" maxlength="40">
+        <a href="/app/deploy" class="deleteButton">Delete</a>
         <a href="/app/deploy" class="deployButton"><span class="loader" id="deploy-loader" style="display: none;"></span><span id="deploy-text">Deploy</span></a>
     </div>
 

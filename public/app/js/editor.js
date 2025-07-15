@@ -3,6 +3,8 @@ let files = {
 <html>
 <head>
     <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <h2>Hello, world!</h2>
@@ -91,6 +93,11 @@ async function setup() {
                     files = json.data;
                     document.querySelector("#site-name").value = siteName;
                     document.querySelector("#deploy-text").innerText = "Save Changes";
+                    document.querySelector(".deleteButton").style.visibility = "visible";
+                    document.querySelector(".deployButton").style.marginLeft = "0";
+                    document.querySelector(".deleteButton").addEventListener("click", handleDelete);
+
+                    history.replaceState({}, "", location.origin + location.pathname + `?edit=${siteName}`);
                 } else {
                     // alert("Error: " + text);
                     // window.edit = false
@@ -271,9 +278,13 @@ function newFile() {
     });
 }
 
+const escapeHtml = (unsafe) => {
+    return unsafe.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+};
+
 async function handleDeploy(e) {
     e.preventDefault();
-    if (document.querySelector(".deployButton").dataset.disabled) {
+    if (document.querySelector(".deployButton").dataset.disabled == "true") {
         return;
     }
     // submitPost("/app/deploy", {name: document.querySelector("#site-name").value, data: JSON.stringify(files)})
@@ -286,9 +297,6 @@ async function handleDeploy(e) {
     if (window.edit) {
         console.log("saving changes");
         let newName = document.querySelector("#site-name").value;
-        const escapeHtml = (unsafe) => {
-            return unsafe.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-        };
         if (siteName != newName) {
             let result = await Swal.fire({
                 title: "Confirm site name change",
@@ -342,5 +350,52 @@ async function handleDeploy(e) {
                 .at(-1)}`,
             "_blank"
         );
+    }
+}
+
+async function handleDelete(e) {
+    e.preventDefault();
+    let result = await Swal.fire({
+        title: "Confirm deletion",
+        html: `Are you sure you want to delete <b>${escapeHtml(siteName)}</b>? <span style="color: red;">Warning: THIS IS IRREVERSIBLE</span>`,
+        showCancelButton: true,
+        denyButtonText: "Continue",
+        showDenyButton: true,
+        showConfirmButton: false,
+        icon: "question",
+    });
+    if (result.isDenied) {
+        let result2 = await Swal.fire({
+            title: "Confirm deletion final warning",
+            html: `Are you absolutely sure you want the project <b>${escapeHtml(siteName)}</b> to be lost forever?`,
+            showCancelButton: true,
+            denyButtonText: "Continue",
+            showConfirmButton: false,
+            showDenyButton: true,
+            icon: "question",
+            showLoaderOnDeny: true,
+            preDeny: async () => {
+                let response = await fetch("/app/edit", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "delete",
+                        siteName: siteName,
+                        sitePass: sitePass,
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                if (response.ok) {
+                    location.href = "/?deleted"
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: "There was an error while deleting your site: " + (await response.text()),
+                        icon: "error",
+                    });
+                }
+            },
+        });
     }
 }

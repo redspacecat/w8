@@ -16,7 +16,8 @@ api.test = async function (request, reply) {
 
 api.getSite = async function (request, reply) {
     let siteName = request.params.name;
-    let sitePath = request.url.slice(siteName.length + 3);
+    // let sitePath = request.url.slice(siteName.length + 3);
+    let sitePath = request.urlData("path").slice(siteName.length + 3);
     if (sitePath == "") {
         // sitePath = "/"
         return reply.redirect(`/s/${siteName}/`);
@@ -134,6 +135,7 @@ api.getSite = async function (request, reply) {
 };
 
 function returnPage(b, type, path) {
+    let cacheControl = b.request.query.new == "true" ? "no-cache" : "max-age=604800";
     if (type == "text/html") {
         let dom = new JSDOM(b.pages[path]);
         let els = dom.window.document.querySelectorAll("link, a, script");
@@ -145,9 +147,9 @@ function returnPage(b, type, path) {
                 }
             }
         }
-        b.reply.status(200).type(type).header("Cache-Control", "max-age=604800").send(dom.serialize());
+        b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(dom.serialize());
     } else {
-        b.reply.status(200).type(type).header("Cache-Control", "max-age=604800").send(b.pages[path]);
+        b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
     }
 }
 
@@ -219,22 +221,77 @@ api.editRequest = async function (request, reply) {
             if (params.newName.length > 40 || params.newName.length < 1) {
                 return reply.code(400).send("Site name length disallowed");
             }
-            params.neawName = params.newName.replace(/[^a-zA-Z0-9_\-]/g, "");
+            params.newName = params.newName.replace(/[^a-zA-Z0-9_\-]/g, "");
 
             let data = await supabase.from("sites").select().eq("site_name", request.body.oldName);
             if (!data.data[0]) {
                 return reply.code(400).send("That site doesn't exist");
             } else {
-                let data3 = await supabase.from("sites").select().eq("site_name", request.body.newName);
-                if (data3.data[0]) {
-                    return reply.code(400).send("The target site name already exists");
+                if (params.newName != params.oldName) {
+                    let data3 = await supabase.from("sites").select().eq("site_name", request.body.newName);
+                    if (data3.data[0]) {
+                        return reply.code(400).send("The target site name already exists");
+                    }
                 }
                 if (data.data[0].site_password == request.body.sitePass) {
                     let data2 = await supabase.from("sites").update({ site_name: params.newName, site_data: params.files }).eq("site_name", params.oldName);
+                    let dirPrepend;
+                    if (process.env.NODE_ENV == "dev") {
+                        dirPrepend = "";
+                        console.log("dev");
+                    } else {
+                        dirPrepend = "/";
+                        console.log("prod");
+                    }
+                    try {
+                        let data3 = fs.readFileSync(dirPrepend + "tmp/siteCache.json");
+                        let cache = JSON.parse(data3);
+                        if (cache[params.newName]) {
+                            delete cache[params.newName];
+                        }
+                        fs.writeFileSync(dirPrepend + "tmp/siteCache.json", JSON.stringify(cache), { flag: "w" });
+                        console.log("cache refreshed");
+                    } catch (err) {
+                        console.log("failed to refresh cache");
+                    }
                     return reply.code(200).send("Updated!");
                 } else {
                     return reply.code(403).send("Unauthorized");
                 }
+            }
+        } else if (request.body.action == "delete") {
+            let params = request.body;
+            if (params.siteName && params.sitePass) {
+                let data2 = await supabase.from("sites").select().eq("site_name", params.siteName);
+                if (data2.data[0].site_password == params.sitePass) {
+                    let data = await supabase.from("sites").delete().eq("site_name", params.siteName);
+                    
+                    let dirPrepend;
+                    if (process.env.NODE_ENV == "dev") {
+                        dirPrepend = "";
+                        console.log("dev");
+                    } else {
+                        dirPrepend = "/";
+                        console.log("prod");
+                    }
+                    try {
+                        let data3 = fs.readFileSync(dirPrepend + "tmp/siteCache.json");
+                        let cache = JSON.parse(data3);
+                        if (cache[params.newName]) {
+                            delete cache[params.newName];
+                        }
+                        fs.writeFileSync(dirPrepend + "tmp/siteCache.json", JSON.stringify(cache), { flag: "w" });
+                        console.log("cache refreshed");
+                    } catch (err) {
+                        console.log("failed to refresh cache");
+                    }
+
+                    return reply.code(200).send("Site deleted successfully");
+                } else {
+                    return reply.code(403).send("Unauthorized");
+                }
+            } else {
+                return reply.code(400).send("Invalid");
             }
         }
     }

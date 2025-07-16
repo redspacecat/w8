@@ -160,6 +160,13 @@ api.page = function (p) {
     };
 };
 
+function slashUnescape(contents) {
+    var replacements = { "\\\\": "\\", "\\n": "\n", '\\"': '"' };
+    return contents.replace(/\\(\\|n|")/g, function (replace) {
+        return replacements[replace];
+    });
+}
+
 api.deploy = async function (request, reply) {
     // return reply.code(403).send("Site creations are disabled for now");
     if (!request.body.name || !request.body.files) {
@@ -167,6 +174,10 @@ api.deploy = async function (request, reply) {
     }
     let name = request.body.name;
     let password = request.body.password || "";
+    let siteSize = new File([slashUnescape(JSON.stringify(request.body.files))], "text/plain").size;
+    if (siteSize > 1000000) {
+        return reply.code(400).send("Site too large! Max size: 1 megabyte")
+    }
     if (name.length > 40 || name.length < 1) {
         return reply.code(400).send("Site name length disallowed");
     }
@@ -265,7 +276,7 @@ api.editRequest = async function (request, reply) {
                 let data2 = await supabase.from("sites").select().eq("site_name", params.siteName);
                 if (data2.data[0].site_password == params.sitePass) {
                     let data = await supabase.from("sites").delete().eq("site_name", params.siteName);
-                    
+
                     let dirPrepend;
                     if (process.env.NODE_ENV == "dev") {
                         dirPrepend = "";

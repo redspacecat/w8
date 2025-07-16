@@ -352,7 +352,7 @@
     </div>
 
     <div class="button-loader-container">
-        <button id="deployButton" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl rounded-full shadow-lg
+        <button id="deployButton" hidden class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl rounded-full shadow-lg
                         hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl transform hover:scale-105 transition-all duration-300
                         focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-75 active:scale-95">
             Deploy Now
@@ -379,6 +379,12 @@
          * @return Formatted string.
          */
         function humanFileSize(bytes, si = false, dp = 1) {
+            if (bytes > 1000000) { // one megabyte
+                alertify.alert("There is a site size limit of one megabyte for now, this may be increased in the future.", function() {location.href = "/"}).set({ "title": "Your site is too large!" }).set({ "movable": false });
+                document.querySelector("#deployButton").hidden = true
+            } else {
+                document.querySelector("#deployButton").hidden = false
+            }
             const thresh = si ? 1000 : 1024;
 
             if (Math.abs(bytes) < thresh) {

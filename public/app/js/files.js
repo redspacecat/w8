@@ -26,7 +26,7 @@ hierarchy.addEventListener("click", function (event) {
             saveFile();
             loadFile(path);
             if (path.endsWith(".html")) {
-                loadPage(path)
+                loadPage(path, true)
             }
         }
         if (type == "folder") {

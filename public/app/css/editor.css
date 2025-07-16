@@ -1,0 +1,339 @@
+:root {
+    --hierarchy-width: 50px;
+}
+
+body {
+    margin: 0;
+}
+
+#editor {
+    width: 45%;
+    height: calc(100vh - 50px - 4px);
+    vertical-align: bottom;
+    border: 2px solid rgb(80, 80, 80);
+}
+
+#wrapper {
+    display: flex;
+}
+
+#preview {
+    border: 2px solid rgb(80, 80, 80);
+    border-left: none;
+    width: 35%;
+    height: calc(100vh - 50px - 4px);
+
+    flex: 1;
+    /* adjust automatically */
+    min-width: 0;
+    /* allow flexing beyond auto width */
+    overflow: hidden;
+    /* hide overflow on small width */
+}
+
+#files {
+    width: 20%;
+    border: 2px solid black;
+    border-right: none;
+    border-left: none;
+}
+
+.cm-editor {
+    height: 100%;
+}
+
+.cm-editor .cm-diagnosticSource {
+    display: none;
+}
+
+.cm-editor .cm-diagnosticText {
+    font-size: small;
+}
+
+.slider,
+.slider2 {
+    line-height: 100%;
+    width: 10px;
+    background-color: #dee2e6;
+    border: none;
+    cursor: col-resize;
+    user-select: none;
+    /* disable selection */
+    text-align: center;
+    /* visibility: hidden; */
+    opacity: 0;
+}
+
+#files,
+#editor {
+    min-width: 0px;
+}
+
+#newFile {
+    position: absolute;
+    width: var(--hierarchy-width);
+    height: 40px;
+}
+
+#newFile {
+    /* Positioning and Sizing */
+    position: relative;
+    /* Changed from absolute for better flow within #files */
+    width: calc(100% - 10px);
+    /* Adjust width to fit with padding */
+    height: 40px;
+    margin: 5px;
+    /* Add some margin for spacing */
+    box-sizing: border-box;
+    /* Include padding and border in the element's total width and height */
+
+    /* Typography */
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+    /* White text */
+
+    /* Background and Border */
+    background-color: #007bff;
+    /* A standard blue for a primary action */
+    border: none;
+    border-radius: 5px;
+    /* Slightly rounded corners */
+
+    /* Alignment */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Cursor and Transition */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    /* Smooth transitions for hover effects */
+}
+
+#newFile:hover {
+    background-color: #0056b3;
+    /* Darker blue on hover */
+}
+
+#newFile:active {
+    transform: translateY(1px);
+    /* Slight press effect when clicked */
+}
+
+.deleteButton {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #a74343;
+    border: none;
+    border-radius: 5px;
+    height: 40px;
+    /* Match height of newFile button */
+    padding: 0 15px;
+    /* Add horizontal padding */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    /* Pushes the button to the far right within its flex container */
+    margin-right: 10px;
+    /* Add some right margin */
+    text-decoration: none;
+    font-weight: normal;
+    visibility: hidden;
+}
+
+.deleteButton:hover {
+    background-color: #a63535;
+    /* Darker red on hover */
+}
+
+.deleteButton:active {
+    transform: translateY(1px);
+    /* Slight press effect when clicked */
+}
+
+.viewButton {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #6e63e4;
+    border: none;
+    border-radius: 5px;
+    height: 40px;
+    /* Match height of newFile button */
+    padding: 0 15px;
+    /* Add horizontal padding */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0;
+    /* Pushes the button to the far right within its flex container */
+    margin-right: 10px;
+    /* Add some right margin */
+    text-decoration: none;
+    font-weight: normal;
+    visibility: hidden;
+}
+
+.viewButton:hover {
+    background-color: #6053e7;
+    /* Darker red on hover */
+}
+
+.viewButton:active {
+    transform: translateY(1px);
+    /* Slight press effect when clicked */
+}
+
+/* Styles for the Deploy button, mimicking the New File button */
+.deployButton {
+    /* Basic styling similar to #newFile */
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #28a745;
+    /* A standard green for a success/deploy action */
+    border: none;
+    border-radius: 5px;
+    height: 40px;
+    /* Match height of newFile button */
+    padding: 0 15px;
+    /* Add horizontal padding */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    /* Pushes the button to the far right within its flex container */
+    margin-right: 10px;
+    /* Add some right margin */
+    text-decoration: none;
+    font-weight: normal;
+}
+
+.deployButton:hover {
+    background-color: #218838;
+    /* Darker green on hover */
+}
+
+.deployButton:active {
+    transform: translateY(1px);
+    /* Slight press effect when clicked */
+}
+
+.deployButton[data-disabled="true"] {
+    background-color: gray;
+    cursor: not-allowed;
+}
+
+.deployButton[data-disabled="true"] #deploy-loader {
+    display: inline !important;
+}
+
+#deploy-loader {
+    width: 22px;
+    height: 22px;
+    margin-right: 7px;
+    margin-left: -7px;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #fff;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Optional: Adjust the hierarchy div to account for the button's new positioning */
+#hierarchy {
+    padding-top: 0;
+    /* Remove top padding if it conflicts with the button's margin */
+}
+
+#editor-code {
+    height: calc(100% - 30px);
+}
+
+#editor-manage {
+    height: 28px;
+    border-bottom: 2px solid black;
+}
+
+#editor-manage-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+#current-file {
+    margin: 5px;
+    width: 100%;
+}
+
+#current-file:focus {
+    outline: none;
+}
+
+#delete-file {
+    background-color: pink;
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+}
+
+#delete-file:hover {
+    background-color: rgb(255, 170, 184);
+    cursor: pointer;
+}
+
+#rename-file {
+    background-color: rgb(205, 202, 50);
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    margin: 3px;
+}
+
+#rename-file:hover {
+    background-color: rgb(159, 205, 50);
+}
+
+#prettify-file {
+    background-color: rgb(149, 196, 234);
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    margin-left: 3px;
+}
+
+#prettify-file:hover {
+    background-color: rgb(99, 165, 220);
+}
+
+#delete-file,
+#delete-file:hover,
+#rename-file,
+#rename-file:hover {
+    transition: 0.25s;
+}

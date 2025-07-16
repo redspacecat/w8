@@ -100,6 +100,9 @@ api.getSite = async function (request, reply) {
             case sitePath.endsWith(".html"):
                 type = "text/html";
                 break;
+            case sitePath.endsWith(".json"):
+                type = "application/json";
+                break;
             default:
                 break;
         }
@@ -116,6 +119,9 @@ api.getSite = async function (request, reply) {
                 break;
             case sitePath.endsWith(".html"):
                 type = "text/html";
+                break;
+            case sitePath.endsWith(".json"):
+                type = "application/json";
                 break;
             default:
                 break;

@@ -19,6 +19,7 @@ let files = {
 })`,
 };
 let currentFile = Object.keys(files)[0];
+let previewPage = currentFile;
 
 window.addEventListener("DOMContentLoaded", setup);
 window.addEventListener("cmstatechange", function () {
@@ -32,8 +33,8 @@ window.addEventListener("resize", function () {
 
 window.addEventListener("message", function (msg, origin) {
     console.log(msg, origin);
-    if (msg.data.loadPage) {
-        loadPage(msg.data.loadPage);
+    if (msg.data.l) {
+        loadPage(msg.data.l, true);
     }
 });
 
@@ -96,6 +97,18 @@ async function setup() {
                     document.querySelector(".deleteButton").style.visibility = "visible";
                     document.querySelector(".deleteButton").addEventListener("click", handleDelete);
                     document.querySelector(".deployButton").style.marginLeft = "0";
+                    document.querySelector(".viewButton").style.visibility = "visible";
+                    document.querySelector(".viewButton").addEventListener("click", viewSite);
+
+                    document.addEventListener("keydown", (e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                            // Prevent the Save dialog to open
+                            e.preventDefault();
+                            // Place your code here
+                            console.log("CTRL + S");
+                            document.querySelector(".deployButton").click();
+                        }
+                    });
 
                     history.replaceState({}, "", location.origin + location.pathname + `?edit=${siteName}`);
                 } else {
@@ -117,30 +130,60 @@ async function setup() {
     document.querySelector("#delete-file").addEventListener("click", deleteFile);
     document.querySelector("#rename-file").addEventListener("click", renameFile);
     document.querySelector(".deployButton").addEventListener("click", handleDeploy);
+    document.querySelector("#prettify-file").addEventListener("click", prettify)
     createHierarchy(files);
     loadFile(currentFile);
     createSite();
+    handleSliders();
     document.documentElement.style.setProperty("--hierarchy-width", getComputedStyle(document.querySelector("#files")).width);
 }
 
 function createSite() {
-    loadPage("index.html");
+    if (previewPage && files[previewPage]) {
+        loadPage(previewPage);
+    } else {
+        loadPage("index.html");
+    }
 }
 
-function loadPage(path) {
+function loadPage(path, setPreview=false) {
+    if (setPreview) {
+        previewPage = path
+        console.log(path, previewPage)
+    }
     let file = files[path];
     let dom = new DOMParser().parseFromString(file, "text/html");
     let els = dom.querySelectorAll("link, a, script");
     for (let el of els) {
         let attr = el.tagName == "SCRIPT" ? "src" : "href";
-        if (el[attr]) {
+        if (el[attr] && !el.getAttribute(attr).startsWith("https://")) {
             if (el.getAttribute(attr).startsWith("/")) {
                 el.setAttribute(attr, el.getAttribute(attr).slice(1));
             }
             if (el.tagName == "A") {
-                el[attr] = `javascript:window.top.postMessage({loadPage: \`${el.getAttribute(attr)}\`}, "*")`;
+                let targetAttrStr = btoa(`top.postMessage({l: \`${el.getAttribute(attr)}\`}, "*")`);
+                el[attr] = `javascript:eval(atob('${targetAttrStr}'))`;
             } else {
-                let fileBlob = new Blob([files[el.getAttribute(attr)]], { type: el.getAttribute(attr).endsWith(".css") ? "text/css" : el.getAttribute(attr).endsWith(".js") ? "application/javascript" : "text/html" });
+                let fileBlob;
+                if (el.tagName == "SCRIPT") {
+                    let string = files[el.getAttribute(attr)].replace(/fetch\(+['|"].+?(?=['|"]).[\)|,]/g, function (str) {
+                        let start = str.indexOf("fetch(") + 7;
+                        let end = str.slice(start).search(/['|"]/) + start;
+                        let path = str.slice(start, end);
+                        if (path.startsWith("/")) {
+                            path = path.slice(1);
+                            start += 1;
+                        }
+                        if (!path.endsWith(".json") || !files[path]) {
+                            return str;
+                        }
+                        let url = URL.createObjectURL(new Blob([files[path]], { type: "application/json" }));
+                        return `fetch("${url}"${str.endsWith(")") ? ")" : ""}`;
+                    });
+                    fileBlob = new Blob([string], { type: "application/javascript" });
+                } else {
+                    fileBlob = new Blob([files[el.getAttribute(attr)]], { type: el.getAttribute(attr).endsWith(".css") ? "text/css" : el.getAttribute(attr).endsWith(".js") ? "application/javascript" : "text/html" });
+                }
                 el[attr] = URL.createObjectURL(fileBlob);
             }
         }
@@ -154,11 +197,15 @@ function saveFile() {
     files[currentFile] = view.state.doc.toString();
 }
 
-function loadFile(path) {
+function loadFile(path, clearUndoHistory=true) {
     currentFile = path;
     view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: files[path] },
     });
+
+    if (clearUndoHistory) {
+        cm6.resetUndoRedo(view);
+    }
 
     document.querySelector("#current-file").value = currentFile;
 
@@ -173,6 +220,9 @@ function loadFile(path) {
         case path.endsWith(".css"):
             targetLang = "css";
             break;
+        case path.endsWith(".json"):
+            targetLang = "json";
+            break;
         default:
             return;
     }
@@ -181,63 +231,65 @@ function loadFile(path) {
     });
 }
 
-let block = document.querySelector("#editor");
-let block2 = document.querySelector("#files");
-let preview = document.querySelector("#preview");
-let slider = document.querySelector(".slider");
-let slider2 = document.querySelector(".slider2");
-
 function getProp(el, prop) {
     return parseFloat(getComputedStyle(el)[prop].replace("px", ""));
 }
 
-slider.onmousedown = function dragMouseDown(e) {
-    let dragX = e.clientX;
-    preview.style.pointerEvents = "none";
-    document.onmousemove = function onMouseMove(e) {
-        if (getProp(slider, "left") - getProp(slider2, "left") > 100) {
-            block.style.width = getProp(block, "width") + e.clientX - dragX + "px";
-            slider.style.left = getProp(slider, "left") + e.clientX - dragX + "px";
-            dragX = e.clientX;
-        } else if (e.clientX - dragX > 0) {
-            block.style.width = getProp(block, "width") + e.clientX - dragX + "px";
-            slider.style.left = getProp(slider, "left") + e.clientX - dragX + "px";
-            dragX = e.clientX;
-        }
-        // block.style.width = `${getProp(block, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
-        // slider.style.left = block.style.width
-    };
-    // remove mouse-move listener on mouse-up
-    document.onmouseup = function () {
-        document.onmousemove = document.onmouseup = null;
-        preview.style.pointerEvents = "";
-    };
-};
+function handleSliders() {
+    let block = document.querySelector("#editor");
+    let block2 = document.querySelector("#files");
+    let preview = document.querySelector("#preview");
+    let slider = document.querySelector(".slider");
+    let slider2 = document.querySelector(".slider2");
 
-slider2.onmousedown = function dragMouseDown(e) {
-    let dragX = e.clientX;
-    document.onmousemove = function onMouseMove(e) {
-        if (getProp(slider, "left") - getProp(slider2, "left") > 100) {
-            block2.style.width = getProp(block2, "width") + e.clientX - dragX + "px";
-            document.documentElement.style.setProperty("--hierarchy-width", block2.style.width);
-            block.style.width = getProp(block, "width") - (e.clientX - dragX) + "px";
-            slider2.style.left = getProp(slider2, "left") + e.clientX - dragX + "px";
-            dragX = e.clientX;
-        } else if (e.clientX - dragX < 0) {
-            block2.style.width = getProp(block2, "width") + e.clientX - dragX + "px";
-            document.documentElement.style.setProperty("--hierarchy-width", block2.style.width);
-            block.style.width = getProp(block, "width") - (e.clientX - dragX) + "px";
-            slider2.style.left = getProp(slider2, "left") + e.clientX - dragX + "px";
-            dragX = e.clientX;
-        }
-        // block2.style.width = `${getProp(block2, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
-        // block.style.width = `${getProp(block, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
+    slider.onmousedown = function dragMouseDown(e) {
+        let dragX = e.clientX;
+        preview.style.pointerEvents = "none";
+        document.onmousemove = function onMouseMove(e) {
+            if (getProp(slider, "left") - getProp(slider2, "left") > 100) {
+                block.style.width = getProp(block, "width") + e.clientX - dragX + "px";
+                slider.style.left = getProp(slider, "left") + e.clientX - dragX + "px";
+                dragX = e.clientX;
+            } else if (e.clientX - dragX > 0) {
+                block.style.width = getProp(block, "width") + e.clientX - dragX + "px";
+                slider.style.left = getProp(slider, "left") + e.clientX - dragX + "px";
+                dragX = e.clientX;
+            }
+            // block.style.width = `${getProp(block, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
+            // slider.style.left = block.style.width
+        };
+        // remove mouse-move listener on mouse-up
+        document.onmouseup = function () {
+            document.onmousemove = document.onmouseup = null;
+            preview.style.pointerEvents = "";
+        };
     };
-    // remove mouse-move listener on mouse-up
-    document.onmouseup = function () {
-        document.onmousemove = document.onmouseup = null;
+
+    slider2.onmousedown = function dragMouseDown(e) {
+        let dragX = e.clientX;
+        document.onmousemove = function onMouseMove(e) {
+            if (getProp(slider, "left") - getProp(slider2, "left") > 100) {
+                block2.style.width = getProp(block2, "width") + e.clientX - dragX + "px";
+                document.documentElement.style.setProperty("--hierarchy-width", block2.style.width);
+                block.style.width = getProp(block, "width") - (e.clientX - dragX) + "px";
+                slider2.style.left = getProp(slider2, "left") + e.clientX - dragX + "px";
+                dragX = e.clientX;
+            } else if (e.clientX - dragX < 0) {
+                block2.style.width = getProp(block2, "width") + e.clientX - dragX + "px";
+                document.documentElement.style.setProperty("--hierarchy-width", block2.style.width);
+                block.style.width = getProp(block, "width") - (e.clientX - dragX) + "px";
+                slider2.style.left = getProp(slider2, "left") + e.clientX - dragX + "px";
+                dragX = e.clientX;
+            }
+            // block2.style.width = `${getProp(block2, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
+            // block.style.width = `${getProp(block, "width") / getProp(document.querySelector("#wrapper"), "width") * 100}%`
+        };
+        // remove mouse-move listener on mouse-up
+        document.onmouseup = function () {
+            document.onmousemove = document.onmouseup = null;
+        };
     };
-};
+}
 
 function newFile() {
     Swal.fire({
@@ -265,20 +317,24 @@ function newFile() {
         showCancelButton: true,
         confirmButtonText: "Create",
         preConfirm: function (path) {
-            if (path.startsWith("/")) {
+            while (path.startsWith("/")) {
                 path = path.slice(1);
             }
             if (!path) {
                 Swal.showValidationMessage("A file name is required");
             }
-            if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js")) {
-                files[path] = "";
-                saveFile();
-                currentFile = path;
-                loadFile(currentFile);
-                createHierarchy(files);
+            if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".json")) {
+                if (files[path]) {
+                    Swal.showValidationMessage("A file with that name already exists");
+                } else {
+                    files[path] = "";
+                    saveFile();
+                    currentFile = path;
+                    loadFile(currentFile);
+                    createHierarchy(files);
+                }
             } else {
-                Swal.showValidationMessage("Only .html, .css, and .js file formats supported");
+                Swal.showValidationMessage("Only .html, .css, .js, and .json file formats supported");
             }
         },
     });
@@ -337,6 +393,7 @@ async function handleDeploy(e) {
         document.querySelector(".deployButton").dataset.disabled = false;
         document.querySelector("#deploy-text").innerText = "Save Changes";
         if (response.ok) {
+            toast("Site updated successfully")
             if (siteName != newName) {
                 siteName = newName;
                 Swal.fire({
@@ -421,7 +478,14 @@ async function deleteFile() {
 
     if (result.isDenied) {
         delete files[currentFile];
+        if (previewPage == currentFile) {
+            previewPage = Object.keys(files)[0];
+        }
+        currentFile = Object.keys(files)[0];
+        loadFile(currentFile);
         createHierarchy(files);
+        createSite();
+        toast("File deleted")
     }
 }
 
@@ -432,22 +496,74 @@ async function renameFile() {
         inputValue: currentFile,
         confirmButtonText: "Rename",
         preConfirm: (path) => {
-            if (path.startsWith("/")) {
+            while (path.startsWith("/")) {
                 path = path.slice(1);
             }
             if (!path) {
                 Swal.showValidationMessage("A file name is required");
             }
-            if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js")) {
-                files[path] = files[currentFile];
-                delete files[currentFile];
-                currentFile = path;
-                createHierarchy(files);
-                loadFile(currentFile);
-                createSite();
+            if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".json")) {
+                if (files[path]) {
+                    Swal.showValidationMessage("A file with that name already exists");
+                } else {
+                    files[path] = files[currentFile];
+                    delete files[currentFile];
+                    currentFile = path;
+                    createHierarchy(files);
+                    loadFile(currentFile);
+                    createSite();
+                    toast("File renamed")
+                }
             } else {
-                Swal.showValidationMessage("Only .html, .css, and .js file formats supported");
+                Swal.showValidationMessage("Only .html, .css, .js, and .json file formats supported");
             }
         },
     });
+}
+
+function viewSite(e) {
+    e.preventDefault();
+    window.open(`/s/${siteName}/`);
+}
+
+function toast(msg) {
+    Toastify({
+        text: msg,
+        duration: 3000,
+        gravity: "bottom",
+        position: "right"
+    }).showToast();
+}
+
+async function prettify() {
+    let output;
+    let path = currentFile;
+    switch (true) {
+        case path.endsWith(".html"):
+            output = html_beautify(files[path]);
+            break;
+        case path.endsWith(".js"):
+            output = js_beautify(files[path]);
+            break;
+        case path.endsWith(".css"):
+            output = css_beautify(files[path]);
+            break;
+        case path.endsWith(".json"):
+            try {
+                output = JSON.stringify(JSON.parse(files[path]), null, 4);
+            } catch (e) {
+                await Swal.fire({
+                    icon: "error",
+                    title: "Error prettifying",
+                    text: `There was an error while prettifying the JSON — ${e}`,
+                });
+                output = files[path];
+            }
+            break;
+        default:
+            return;
+    }
+    files[path] = output;
+    loadFile(currentFile, false);
+    toast("Prettification complete!")
 }

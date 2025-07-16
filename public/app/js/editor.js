@@ -95,7 +95,6 @@ async function setup() {
                     document.querySelector("#deploy-text").innerText = "Save Changes";
                     document.querySelector(".deleteButton").style.visibility = "visible";
                     document.querySelector(".deployButton").style.marginLeft = "0";
-                    document.querySelector(".deleteButton").addEventListener("click", handleDelete);
 
                     history.replaceState({}, "", location.origin + location.pathname + `?edit=${siteName}`);
                 } else {
@@ -114,6 +113,8 @@ async function setup() {
     } else {
         document.querySelector("#site-name").value = `new-site-${getRandomInt(1, 100000)}`;
     }
+    document.querySelector("#delete-file").addEventListener("click", deleteFile);
+    document.querySelector("#rename-file").addEventListener("click", renameFile);
     document.querySelector(".deployButton").addEventListener("click", handleDeploy);
     createHierarchy(files);
     loadFile(currentFile);
@@ -143,7 +144,9 @@ function loadPage(path) {
             }
         }
     }
-    document.querySelector("#preview").src = URL.createObjectURL(new Blob([dom.documentElement.outerHTML], { type: "text/html" }));
+    var node = dom.doctype;
+    var doctypeString = dom.doctype ? "<!DOCTYPE " + node.name + (node.publicId ? ' PUBLIC "' + node.publicId + '"' : "") + (!node.publicId && node.systemId ? " SYSTEM" : "") + (node.systemId ? ' "' + node.systemId + '"' : "") + ">" : "";
+    document.querySelector("#preview").src = URL.createObjectURL(new Blob([doctypeString + dom.documentElement.outerHTML], { type: "text/html" }));
 }
 
 function saveFile() {
@@ -155,6 +158,8 @@ function loadFile(path) {
     view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: files[path] },
     });
+
+    document.querySelector("#current-file").value = currentFile;
 
     let targetLang;
     switch (true) {
@@ -356,8 +361,8 @@ async function handleDeploy(e) {
 async function handleDelete(e) {
     e.preventDefault();
     let result = await Swal.fire({
-        title: "Confirm deletion",
-        html: `Are you sure you want to delete <b>${escapeHtml(siteName)}</b>? <span style="color: red;">Warning: THIS IS IRREVERSIBLE</span>`,
+        title: "Confirm site deletion",
+        html: `Are you sure you want to delete <b>${escapeHtml(siteName)}</b>? <span style="color: red;">Warning: THIS ACTION IS IRREVERSIBLE</span>`,
         showCancelButton: true,
         denyButtonText: "Continue",
         showDenyButton: true,
@@ -366,7 +371,7 @@ async function handleDelete(e) {
     });
     if (result.isDenied) {
         let result2 = await Swal.fire({
-            title: "Confirm deletion final warning",
+            title: "Confirm site deletion final warning",
             html: `Are you absolutely sure you want the project <b>${escapeHtml(siteName)}</b> to be lost forever?`,
             showCancelButton: true,
             denyButtonText: "Continue",
@@ -387,7 +392,7 @@ async function handleDelete(e) {
                     },
                 });
                 if (response.ok) {
-                    location.href = "/?deleted"
+                    location.href = "/?deleted";
                 } else {
                     Swal.fire({
                         title: "Error",
@@ -398,4 +403,48 @@ async function handleDelete(e) {
             },
         });
     }
+}
+
+async function deleteFile() {
+    let result = await Swal.fire({
+        title: "Confirm file deletion",
+        html: `Are you sure you want to delete the file <b>${escapeHtml(currentFile)}</b>? This action is irreversible!`,
+        showCancelButton: true,
+        denyButtonText: "Delete",
+        showConfirmButton: false,
+        showDenyButton: true,
+        icon: "question",
+    });
+
+    if (result.isDenied) {
+        delete files[currentFile];
+        createHierarchy(files);
+    }
+}
+
+async function renameFile() {
+    await Swal.fire({
+        title: "Enter the new name of the file",
+        input: "text",
+        inputValue: currentFile,
+        confirmButtonText: "Rename",
+        preConfirm: (path) => {
+            if (path.startsWith("/")) {
+                path = path.slice(1);
+            }
+            if (!path) {
+                Swal.showValidationMessage("A file name is required");
+            }
+            if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js")) {
+                files[path] = files[currentFile];
+                delete files[currentFile];
+                currentFile = path;
+                createHierarchy(files);
+                loadFile(currentFile);
+                createSite();
+            } else {
+                Swal.showValidationMessage("Only .html, .css, and .js file formats supported");
+            }
+        },
+    });
 }

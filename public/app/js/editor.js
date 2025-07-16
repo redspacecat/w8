@@ -94,6 +94,7 @@ async function setup() {
                     document.querySelector("#site-name").value = siteName;
                     document.querySelector("#deploy-text").innerText = "Save Changes";
                     document.querySelector(".deleteButton").style.visibility = "visible";
+                    document.querySelector(".deleteButton").addEventListener("click", handleDelete)
                     document.querySelector(".deployButton").style.marginLeft = "0";
 
                     history.replaceState({}, "", location.origin + location.pathname + `?edit=${siteName}`);

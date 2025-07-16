@@ -324,10 +324,10 @@
 
 <body>
     <div style="height: 50px;height: 50px;display: flex;align-items: center;margin-left: 10px;">
-        <span style="font-size: large;margin-right: 10px;">w8 | Create Your Site</span>
+        <span style="font-size: large;margin-right: 10px;"><a href="/">w8</a> | Create Your Site</span>
         <input id="site-name" placeholder="Your site name..." value="" style="font-size: large"
             pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');" maxlength="40">
-        <a href="/app/deploy" class="deleteButton" title="Delete site">Delete</a>
+        <a href="/app/delete" class="deleteButton" title="Delete site">Delete</a>
         <a href="/app/deploy" class="deployButton" title="Deploy/save site">
             <span class="loader" id="deploy-loader" style="display: none;"></span>
             <span id="deploy-text">Deploy</span>

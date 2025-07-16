@@ -176,7 +176,7 @@ api.deploy = async function (request, reply) {
     let password = request.body.password || "";
     let siteSize = new File([slashUnescape(JSON.stringify(request.body.files))], "text/plain").size;
     if (siteSize > 1000000) {
-        return reply.code(400).send("Site too large! Max size: 1 megabyte")
+        return reply.code(400).send("Site too large! Max size: 1 megabyte");
     }
     if (name.length > 40 || name.length < 1) {
         return reply.code(400).send("Site name length disallowed");
@@ -233,6 +233,11 @@ api.editRequest = async function (request, reply) {
                 return reply.code(400).send("Site name length disallowed");
             }
             params.newName = params.newName.replace(/[^a-zA-Z0-9_\-]/g, "");
+
+            let siteSize = new File([slashUnescape(JSON.stringify(params.files))], "text/plain").size;
+            if (siteSize > 1000000) {
+                return reply.code(400).send("Site too large! Max size: 1 megabyte");
+            }
 
             let data = await supabase.from("sites").select().eq("site_name", request.body.oldName);
             if (!data.data[0]) {

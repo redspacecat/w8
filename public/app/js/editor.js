@@ -94,7 +94,7 @@ async function setup() {
                     document.querySelector("#site-name").value = siteName;
                     document.querySelector("#deploy-text").innerText = "Save Changes";
                     document.querySelector(".deleteButton").style.visibility = "visible";
-                    document.querySelector(".deleteButton").addEventListener("click", handleDelete)
+                    document.querySelector(".deleteButton").addEventListener("click", handleDelete);
                     document.querySelector(".deployButton").style.marginLeft = "0";
 
                     history.replaceState({}, "", location.origin + location.pathname + `?edit=${siteName}`);
@@ -333,15 +333,17 @@ async function handleDeploy(e) {
             },
         });
         history.replaceState({}, "", location.origin + location.pathname + `?edit=${newName}`);
-        await sleep(500);
+        await sleep(100);
         document.querySelector(".deployButton").dataset.disabled = false;
         document.querySelector("#deploy-text").innerText = "Save Changes";
         if (response.ok) {
-            siteName = newName;
-            Swal.fire({
-                icon: "success",
-                html: `Your site has been updated! You can find the updated version at <a target="_blank" href="/s/${escapeHtml(newName)}">${location.origin}/s/${escapeHtml(newName)}`,
-            });
+            if (siteName != newName) {
+                siteName = newName;
+                Swal.fire({
+                    icon: "success",
+                    html: `Your site has been updated! You can find the updated version at <a target="_blank" href="/s/${escapeHtml(newName)}">${location.origin}/s/${escapeHtml(newName)}`,
+                });
+            }
         } else {
             Swal.fire({
                 icon: "error",

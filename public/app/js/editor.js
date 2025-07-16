@@ -71,11 +71,17 @@ async function setup() {
         console.log(siteName);
         await Swal.fire({
             title: `Enter the password of the site: ${siteName}`,
-            input: "text",
+            html: '<input type="password" id="password" class="swal2-input" style="width: 80%;">',
             confirmButtonText: "Edit",
             showLoaderOnConfirm: true,
             allowOutsideClick: false,
-            preConfirm: async (pass) => {
+            didOpen: () => {
+                const popup = Swal.getPopup()
+                passwordInput = popup.querySelector('#password')
+                passwordInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm()
+            },
+            preConfirm: async () => {
+                let pass = document.querySelector("#password").value
                 window.sitePass = pass;
                 let response = await fetch("/app/edit", {
                     method: "POST",

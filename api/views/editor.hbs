@@ -29,6 +29,7 @@
         <span style="font-size: large;margin-right: 10px;"><a href="/">w8</a> | Create Your Site</span>
         <input id="site-name" placeholder="Your site name..." value="" style="font-size: large"
             pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');" maxlength="40">
+        <img src="/app/images/settings2.svg" onclick="openSettings()" id="settingsButton">
         <a href="/app/delete" class="deleteButton" title="Delete this site">Delete Site</a>
         <a href="/app/view" class="viewButton" title="View this site in a new tab">View Site</a>
         <a href="/app/deploy" class="deployButton" title="Deploy/save site">

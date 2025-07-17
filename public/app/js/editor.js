@@ -20,11 +20,17 @@ let files = {
 };
 let currentFile = Object.keys(files)[0];
 let previewPage = currentFile;
+let blobURLS = []
+let updatePreviewTimeout
+let updatePreviewWaitTime = 400
 
 window.addEventListener("DOMContentLoaded", setup);
 window.addEventListener("cmstatechange", function () {
+    if (updatePreviewTimeout) {
+        clearTimeout(updatePreviewTimeout)
+    }
+    updatePreviewTimeout = setTimeout(createSite, updatePreviewWaitTime)
     saveFile();
-    createSite();
 });
 
 window.addEventListener("resize", function () {
@@ -78,7 +84,12 @@ async function setup() {
             didOpen: () => {
                 const popup = Swal.getPopup()
                 passwordInput = popup.querySelector('#password')
-                passwordInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm()
+                passwordInput.onkeyup = (event) => {
+                    if (event.key === 'Enter') {
+                        document.querySelector(".swal2-confirm").click()
+                    }
+                }
+                passwordInput.focus()
             },
             preConfirm: async () => {
                 let pass = document.querySelector("#password").value
@@ -100,10 +111,9 @@ async function setup() {
                     files = json.data;
                     document.querySelector("#site-name").value = siteName;
                     document.querySelector("#deploy-text").innerText = "Save Changes";
-                    document.querySelector(".deleteButton").style.visibility = "visible";
+                    document.querySelector(".deleteButton").style.display = "flex"
                     document.querySelector(".deleteButton").addEventListener("click", handleDelete);
-                    document.querySelector(".deployButton").style.marginLeft = "0";
-                    document.querySelector(".viewButton").style.visibility = "visible";
+                    document.querySelector(".viewButton").style.display = "flex"
                     document.querySelector(".viewButton").addEventListener("click", viewSite);
 
                     document.addEventListener("keydown", (e) => {
@@ -152,7 +162,25 @@ function createSite() {
     }
 }
 
+function createBlobURL(blob) {
+    let url = URL.createObjectURL(blob)
+    blobURLS.push(url)
+    // console.log("creating blob", blob)
+    return url
+}
+
+function revokeOldURLS() {
+    console.log("revoking old blobs")
+    while (blobURLS[0]) {
+        // console.log("revoking url", blobURLS[0])
+        blobURLS.shift()
+        URL.revokeObjectURL(blobURLS[0])
+    }
+    // console.log("done")
+}
+
 function loadPage(path, setPreview=false) {
+    revokeOldURLS()
     if (setPreview) {
         previewPage = path
         console.log(path, previewPage)
@@ -183,20 +211,20 @@ function loadPage(path, setPreview=false) {
                         if (!path.endsWith(".json") || !files[path]) {
                             return str;
                         }
-                        let url = URL.createObjectURL(new Blob([files[path]], { type: "application/json" }));
+                        let url = createBlobURL(new Blob([files[path]], { type: "application/json" }));
                         return `fetch("${url}"${str.endsWith(")") ? ")" : ""}`;
                     });
                     fileBlob = new Blob([string], { type: "application/javascript" });
                 } else {
                     fileBlob = new Blob([files[el.getAttribute(attr)]], { type: el.getAttribute(attr).endsWith(".css") ? "text/css" : el.getAttribute(attr).endsWith(".js") ? "application/javascript" : "text/html" });
                 }
-                el[attr] = URL.createObjectURL(fileBlob);
+                el[attr] = createBlobURL(fileBlob);
             }
         }
     }
     var node = dom.doctype;
     var doctypeString = dom.doctype ? "<!DOCTYPE " + node.name + (node.publicId ? ' PUBLIC "' + node.publicId + '"' : "") + (!node.publicId && node.systemId ? " SYSTEM" : "") + (node.systemId ? ' "' + node.systemId + '"' : "") + ">" : "";
-    document.querySelector("#preview").src = URL.createObjectURL(new Blob([doctypeString + dom.documentElement.outerHTML], { type: "text/html" }));
+    document.querySelector("#preview").src = createBlobURL(new Blob([doctypeString + dom.documentElement.outerHTML], { type: "text/html" }));
 }
 
 function saveFile() {
@@ -572,4 +600,13 @@ async function prettify() {
     files[path] = output;
     loadFile(currentFile, false);
     toast("Prettification complete!")
+}
+
+function openSettings() {
+    Swal.fire({
+        title: "Settings",
+        html: `<span>Preview delay in miliseconds</span><br>
+        <input type="range" min="0" max="2000" value=${updatePreviewWaitTime} oninput="updatePreviewWaitTime = this.value;this.nextElementSibling.nextElementSibling.innerText = 'Current: ' + updatePreviewWaitTime + ' milliseconds'"><br><span>Current: ${updatePreviewWaitTime} milliseconds`,
+        confirmButtonText: "Done"
+    })
 }

@@ -121,6 +121,13 @@ body {
     /* Slight press effect when clicked */
 }
 
+#settingsButton {
+    margin-left: auto;
+    margin-left: auto;
+    font-size: xx-large;
+    color: #494949;
+}
+
 .deleteButton {
     font-size: 1rem;
     font-weight: 500;
@@ -137,13 +144,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
+    margin-left: 10px;
     /* Pushes the button to the far right within its flex container */
     margin-right: 10px;
     /* Add some right margin */
     text-decoration: none;
     font-weight: normal;
-    visibility: hidden;
+    /* visibility: hidden; */
+    display: none;
 }
 
 .deleteButton:hover {
@@ -174,11 +182,12 @@ body {
     justify-content: center;
     margin-left: 0;
     /* Pushes the button to the far right within its flex container */
-    margin-right: 10px;
+    /* margin-right: 10px; */
     /* Add some right margin */
     text-decoration: none;
     font-weight: normal;
-    visibility: hidden;
+    /* visibility: hidden; */
+    display: none;
 }
 
 .viewButton:hover {
@@ -210,7 +219,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
+    margin-left: 10px;
     /* Pushes the button to the far right within its flex container */
     margin-right: 10px;
     /* Add some right margin */
@@ -336,4 +345,17 @@ body {
 #rename-file,
 #rename-file:hover {
     transition: 0.25s;
+}
+
+#settingsButton {
+    width: 40px;
+    height: 40px;
+    transition: 1s;
+    filter: invert(26%) sepia(0%) saturate(0%) hue-rotate(97deg) brightness(98%) contrast(93%);
+}
+
+#settingsButton:hover {
+    rotate: 180deg;
+    transition: 1s;
+    filter: invert(0%) sepia(79%) saturate(12%) hue-rotate(232deg) brightness(96%) contrast(103%);
 }

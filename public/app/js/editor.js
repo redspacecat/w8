@@ -20,16 +20,16 @@ let files = {
 };
 let currentFile = Object.keys(files)[0];
 let previewPage = currentFile;
-let blobURLS = []
-let updatePreviewTimeout
-let updatePreviewWaitTime = 400
+let blobURLS = [];
+let updatePreviewTimeout;
+let updatePreviewWaitTime = 400;
 
 window.addEventListener("DOMContentLoaded", setup);
 window.addEventListener("cmstatechange", function () {
     if (updatePreviewTimeout) {
-        clearTimeout(updatePreviewTimeout)
+        clearTimeout(updatePreviewTimeout);
     }
-    updatePreviewTimeout = setTimeout(createSite, updatePreviewWaitTime)
+    updatePreviewTimeout = setTimeout(createSite, updatePreviewWaitTime);
     saveFile();
 });
 
@@ -58,7 +58,7 @@ async function setup() {
     let params = new URLSearchParams(location.search);
     window.edit = params.has("edit");
     if (edit) {
-        await sleep(100);
+        await sleep(50);
         if (params.get("edit")) {
             window.siteName = params.get("edit");
         } else {
@@ -75,6 +75,15 @@ async function setup() {
             });
         }
         console.log(siteName);
+        if (document.cookie) {
+            let cookieData = JSON.parse(decodeURIComponent(document.cookie.split("=").at(-1).split(";")[0]));
+            if (cookieData.name == siteName) {
+                window.sitePass = cookieData.pass;
+            }
+            console.log(document.cookie)
+            document.cookie += ';expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            console.log("parsed password", cookieData)
+        }
         await Swal.fire({
             title: `Enter the password of the site: ${siteName}`,
             html: '<input type="password" id="password" class="swal2-input" style="width: 80%;">',
@@ -82,18 +91,25 @@ async function setup() {
             showLoaderOnConfirm: true,
             allowOutsideClick: false,
             didOpen: () => {
-                const popup = Swal.getPopup()
-                passwordInput = popup.querySelector('#password')
+                const popup = Swal.getPopup();
+                passwordInput = popup.querySelector("#password");
                 passwordInput.onkeydown = (event) => {
-                    if (event.key === 'Enter') {
-                        Swal.clickConfirm()
+                    if (event.key === "Enter") {
+                        Swal.clickConfirm();
                     }
+                };
+                passwordInput.focus();
+                if (window.sitePass) {
+                    console.log("prefilling password")
+                    passwordInput.value = sitePass;
+                    passwordInput.readonly = true;
+                    Swal.clickConfirm();
                 }
-                passwordInput.focus()
             },
             preConfirm: async () => {
-                let pass = document.querySelector("#password").value
+                let pass = window.sitePass || document.querySelector("#password").value;
                 window.sitePass = pass;
+                console.log("okay")
                 let response = await fetch("/app/edit", {
                     method: "POST",
                     body: JSON.stringify({
@@ -111,9 +127,9 @@ async function setup() {
                     files = json.data;
                     document.querySelector("#site-name").value = siteName;
                     document.querySelector("#deploy-text").innerText = "Save Changes";
-                    document.querySelector(".deleteButton").style.display = "flex"
-                    document.querySelector(".deleteButton").addEventListener("click", handleDelete);
-                    document.querySelector(".viewButton").style.display = "flex"
+                    // document.querySelector(".deleteButton").style.display = "flex"
+                    // document.querySelector(".deleteButton").addEventListener("click", handleDelete);
+                    document.querySelector(".viewButton").style.display = "flex";
                     document.querySelector(".viewButton").addEventListener("click", viewSite);
 
                     document.addEventListener("keydown", (e) => {
@@ -146,7 +162,7 @@ async function setup() {
     document.querySelector("#delete-file").addEventListener("click", deleteFile);
     document.querySelector("#rename-file").addEventListener("click", renameFile);
     document.querySelector(".deployButton").addEventListener("click", handleDeploy);
-    document.querySelector("#prettify-file").addEventListener("click", prettify)
+    document.querySelector("#prettify-file").addEventListener("click", prettify);
     createHierarchy(files);
     loadFile(currentFile);
     createSite();
@@ -163,27 +179,27 @@ function createSite() {
 }
 
 function createBlobURL(blob) {
-    let url = URL.createObjectURL(blob)
-    blobURLS.push(url)
+    let url = URL.createObjectURL(blob);
+    blobURLS.push(url);
     // console.log("creating blob", blob)
-    return url
+    return url;
 }
 
 function revokeOldURLS() {
-    console.log("revoking old blobs")
+    console.log("revoking old blobs");
     while (blobURLS[0]) {
         // console.log("revoking url", blobURLS[0])
-        blobURLS.shift()
-        URL.revokeObjectURL(blobURLS[0])
+        blobURLS.shift();
+        URL.revokeObjectURL(blobURLS[0]);
     }
     // console.log("done")
 }
 
-function loadPage(path, setPreview=false) {
-    revokeOldURLS()
+function loadPage(path, setPreview = false) {
+    revokeOldURLS();
     if (setPreview) {
-        previewPage = path
-        console.log(path, previewPage)
+        previewPage = path;
+        console.log(path, previewPage);
     }
     let file = files[path];
     let dom = new DOMParser().parseFromString(file, "text/html");
@@ -231,7 +247,7 @@ function saveFile() {
     files[currentFile] = view.state.doc.toString();
 }
 
-function loadFile(path, clearUndoHistory=true) {
+function loadFile(path, clearUndoHistory = true) {
     currentFile = path;
     view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: files[path] },
@@ -427,7 +443,7 @@ async function handleDeploy(e) {
         document.querySelector(".deployButton").dataset.disabled = false;
         document.querySelector("#deploy-text").innerText = "Save Changes";
         if (response.ok) {
-            toast("Site updated successfully")
+            toast("Site updated successfully");
             if (siteName != newName) {
                 siteName = newName;
                 Swal.fire({
@@ -453,7 +469,7 @@ async function handleDeploy(e) {
 }
 
 async function handleDelete(e) {
-    e.preventDefault();
+    // e.preventDefault();
     let result = await Swal.fire({
         title: "Confirm site deletion",
         html: `Are you sure you want to delete <b>${escapeHtml(siteName)}</b>? <span style="color: red;">Warning: THIS ACTION IS IRREVERSIBLE</span>`,
@@ -487,6 +503,7 @@ async function handleDelete(e) {
                 });
                 if (response.ok) {
                     location.href = "/?deleted";
+                    await sleep(999999)
                 } else {
                     Swal.fire({
                         title: "Error",
@@ -519,7 +536,7 @@ async function deleteFile() {
         loadFile(currentFile);
         createHierarchy(files);
         createSite();
-        toast("File deleted")
+        toast("File deleted");
     }
 }
 
@@ -546,7 +563,7 @@ async function renameFile() {
                     createHierarchy(files);
                     loadFile(currentFile);
                     createSite();
-                    toast("File renamed")
+                    toast("File renamed");
                 }
             } else {
                 Swal.showValidationMessage("Only .html, .css, .js, and .json file formats supported");
@@ -565,7 +582,7 @@ function toast(msg) {
         text: msg,
         duration: 3000,
         gravity: "bottom",
-        position: "right"
+        position: "right",
     }).showToast();
 }
 
@@ -599,14 +616,16 @@ async function prettify() {
     }
     files[path] = output;
     loadFile(currentFile, false);
-    toast("Prettification complete!")
+    toast("Prettification complete!");
 }
 
 function openSettings() {
     Swal.fire({
         title: "Settings",
         html: `<span>Preview delay in miliseconds</span><br>
-        <input type="range" min="0" max="2000" value=${updatePreviewWaitTime} oninput="updatePreviewWaitTime = this.value;this.nextElementSibling.nextElementSibling.innerText = 'Current: ' + updatePreviewWaitTime + ' milliseconds'"><br><span>Current: ${updatePreviewWaitTime} milliseconds`,
-        confirmButtonText: "Done"
-    })
+        <input type="range" min="0" max="2000" value=${updatePreviewWaitTime} oninput="updatePreviewWaitTime = this.value;this.nextElementSibling.nextElementSibling.innerText = 'Current: ' + updatePreviewWaitTime + ' milliseconds'"><br><span>Current: ${updatePreviewWaitTime} milliseconds</span>
+        <br><br><span>Manage Site</span><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>
+        `,
+        confirmButtonText: "Done",
+    });
 }

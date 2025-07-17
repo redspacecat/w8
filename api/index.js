@@ -35,8 +35,14 @@ async function main() {
         app.get(path, api.getSite);
     });
 
-    app.get("/app/editor", api.page("editor"));
-    app.get("/app/deploy", api.page("deploy"))
+    app.get("/app/editor", async function (request, reply) {
+        if (!Object.keys(request.query).includes("edit")) {
+            return reply.redirect("/")
+        } else {
+            return reply.view("/editor.hbs", {})
+        }
+    });
+    app.get("/app/create", api.page("deploy"))
     app.post("/app/deploy", api.rateLimit(1, 3600000), api.deploy)
     app.post("/app/edit", api.rateLimit(2, 60000), api.editRequest)
 

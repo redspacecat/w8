@@ -84,9 +84,9 @@ async function setup() {
             didOpen: () => {
                 const popup = Swal.getPopup()
                 passwordInput = popup.querySelector('#password')
-                passwordInput.onkeyup = (event) => {
+                passwordInput.onkeydown = (event) => {
                     if (event.key === 'Enter') {
-                        document.querySelector(".swal2-confirm").click()
+                        Swal.clickConfirm()
                     }
                 }
                 passwordInput.focus()

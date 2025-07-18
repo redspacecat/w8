@@ -119,6 +119,10 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
         passwordInput.reportValidity(); // Show browser's validation message
         return; // Stop the function if validation fails
     }
+    if (!document.querySelector("#acceptTerms").checkValidity()) {
+        document.querySelector("#acceptTerms").reportValidity()
+        return
+    }
 
     const deployButton = event.currentTarget;
     const loader = document.getElementById("loader");
@@ -158,3 +162,12 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
         //alert(text)
     })();
 });
+
+function updateTermsAccept() {
+    document.querySelector("#deployButton").disabled = !document.querySelector("#acceptTerms").checked
+}
+
+window.addEventListener("DOMContentLoaded", function() {
+    document.querySelector("#acceptTerms").checked = false
+    updateTermsAccept()
+})

@@ -45,6 +45,7 @@ async function main() {
     app.get("/app/create", api.page("deploy"))
     app.post("/app/deploy", api.rateLimit(1, 3600000), api.deploy)
     app.post("/app/edit", api.rateLimit(2, 60000), api.editRequest)
+    app.get("/app/terms", api.page("terms"))
 
     app.setNotFoundHandler(function (request, reply) {
         reply.code(404).send("404 Not Found")

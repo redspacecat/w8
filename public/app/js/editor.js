@@ -24,6 +24,29 @@ let blobURLS = [];
 let updatePreviewTimeout;
 let updatePreviewWaitTime = 400;
 
+const beforeUnloadHandler = (event) => {
+    // Recommended
+    event.preventDefault();
+
+    // Included for legacy support, e.g. Chrome/Edge < 119
+    event.returnValue = true;
+};
+
+let settings = new Proxy({}, {
+    set: function (target, key, value) {
+        console.log(`${key} set to ${value}`);
+        if (key == "unsavedChanges") {
+            if (value) {
+                window.addEventListener("beforeunload", beforeUnloadHandler);
+            } else {
+                window.removeEventListener("beforeunload", beforeUnloadHandler);
+            }
+        }
+        target[key] = value;
+        return true;
+    },
+});
+
 window.addEventListener("DOMContentLoaded", setup);
 window.addEventListener("cmstatechange", function () {
     if (updatePreviewTimeout) {
@@ -31,6 +54,7 @@ window.addEventListener("cmstatechange", function () {
     }
     updatePreviewTimeout = setTimeout(createSite, updatePreviewWaitTime);
     saveFile();
+    settings.unsavedChanges = true
 });
 
 window.addEventListener("resize", function () {
@@ -80,9 +104,9 @@ async function setup() {
             if (cookieData.name == siteName) {
                 window.sitePass = cookieData.pass;
             }
-            console.log(document.cookie)
-            document.cookie += ';expires=Thu, 01 Jan 1970 00:00:01 GMT';
-            console.log("parsed password", cookieData)
+            console.log(document.cookie);
+            document.cookie += ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
+            console.log("parsed password", cookieData);
         }
         await Swal.fire({
             title: `Enter the password of the site: ${siteName}`,
@@ -100,7 +124,7 @@ async function setup() {
                 };
                 passwordInput.focus();
                 if (window.sitePass) {
-                    console.log("prefilling password")
+                    console.log("prefilling password");
                     passwordInput.value = sitePass;
                     passwordInput.readonly = true;
                     Swal.clickConfirm();
@@ -109,7 +133,7 @@ async function setup() {
             preConfirm: async () => {
                 let pass = window.sitePass || document.querySelector("#password").value;
                 window.sitePass = pass;
-                console.log("okay")
+                console.log("okay");
                 let response = await fetch("/app/edit", {
                     method: "POST",
                     body: JSON.stringify({
@@ -443,6 +467,7 @@ async function handleDeploy(e) {
         document.querySelector(".deployButton").dataset.disabled = false;
         document.querySelector("#deploy-text").innerText = "Save Changes";
         if (response.ok) {
+            settings.unsavedChanges = false
             toast("Site updated successfully");
             if (siteName != newName) {
                 siteName = newName;
@@ -503,7 +528,7 @@ async function handleDelete(e) {
                 });
                 if (response.ok) {
                     location.href = "/?deleted";
-                    await sleep(999999)
+                    await sleep(999999);
                 } else {
                     Swal.fire({
                         title: "Error",

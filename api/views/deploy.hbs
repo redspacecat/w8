@@ -77,6 +77,10 @@
         .ajs-dialog {
             translate: 0 50%;
         }
+
+        #deployButton:disabled {
+            background-image: linear-gradient(gray, darkgray);
+        }
     </style>
 </head>
 
@@ -99,9 +103,13 @@
             <label for="password" class="text-lg text-gray-700">Password:</label>
             <input type="password" id="password"
                 class="w-full text-lg p-2 rounded-lg border border-gray-300 shadow-sm outline-none transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 mt-1"
-                placeholder="Enter password (optional)" maxlength="40">
+                placeholder="Enter password" minlength="1" maxlength="40" required>
             <span class="text-sm text-gray-500 mt-1 block">This password will allow you to edit/delete your site
                 later.</span>
+        </div>
+        <div class="mb-4 w-full">
+            <input type="checkbox" id="acceptTerms" onchange="updateTermsAccept()" required>
+            <label for="acceptTerms">By checking this box, I accept that I have read and agree to the <a style="color: blue;" href="/app/terms" target="_blank">site uploading terms</a></label>
         </div>
 
         {{!-- <div class="flex items-center justify-center mb-4">
@@ -111,7 +119,7 @@
     </div>
 
     <div class="button-loader-container">
-        <button id="deployButton" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl rounded-full shadow-lg
+        <button id="deployButton" disabled class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl rounded-full shadow-lg
                         hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl transform hover:scale-105 transition-all duration-300
                         focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-75 active:scale-95">
             Create Now

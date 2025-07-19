@@ -21,9 +21,10 @@ let files = {
 let currentFile = Object.keys(files)[0];
 let previewPage = currentFile;
 let blobURLS = [];
+let originalURLS = [];
 let updatePreviewTimeout;
 let updatePreviewWaitTime = 400;
-let logs = []
+let logs = [];
 
 const beforeUnloadHandler = (event) => {
     // Recommended
@@ -33,20 +34,23 @@ const beforeUnloadHandler = (event) => {
     event.returnValue = true;
 };
 
-let settings = new Proxy({}, {
-    set: function (target, key, value) {
-        console.log(`${key} set to ${value}`);
-        if (key == "unsavedChanges") {
-            if (value) {
-                window.addEventListener("beforeunload", beforeUnloadHandler);
-            } else {
-                window.removeEventListener("beforeunload", beforeUnloadHandler);
+let settings = new Proxy(
+    {},
+    {
+        set: function (target, key, value) {
+            console.log(`${key} set to ${value}`);
+            if (key == "unsavedChanges") {
+                if (value) {
+                    window.addEventListener("beforeunload", beforeUnloadHandler);
+                } else {
+                    window.removeEventListener("beforeunload", beforeUnloadHandler);
+                }
             }
-        }
-        target[key] = value;
-        return true;
-    },
-});
+            target[key] = value;
+            return true;
+        },
+    }
+);
 
 window.addEventListener("DOMContentLoaded", setup);
 window.addEventListener("cmstatechange", function () {
@@ -55,7 +59,7 @@ window.addEventListener("cmstatechange", function () {
     }
     updatePreviewTimeout = setTimeout(createSite, updatePreviewWaitTime);
     saveFile();
-    settings.unsavedChanges = true
+    settings.unsavedChanges = true;
 });
 
 window.addEventListener("resize", function () {
@@ -67,14 +71,27 @@ window.addEventListener("message", function (msg, origin) {
     if (msg.data.l) {
         loadPage(msg.data.l, true);
     } else if (msg.data.action == "console") {
-        console.log("message from iframe console", msg.data.type, msg.data.data)
-        let str = ""
-        for (let value of Object.values(msg.data.data)) {
-            str += value
-            str += " "
+        console.log("message from iframe console", msg.data.type, msg.data.data, msg.data.trace);
+        let str;
+        let trace;
+        if (msg.data.type == "jserror") {
+            str = msg.data.data;
+            trace = msg.data.trace;
+        } else {
+            str = "";
+            for (let value of Object.values(msg.data.data)) {
+                str += value;
+                str += " ";
+            }
+            str = str.slice(0, str.length - 1);
+            trace = msg.data.trace[1];
         }
-        str = str.slice(0, str.length - 1)
-        logs.push({time: new Date().toLocaleString(), type: msg.data.type, data: str})
+        let traceFile = originalURLS[blobURLS.indexOf(trace.file)];
+        // console.log(originalURLS, blobURLS, trace.file, traceFile);
+        let traceStr = `${trace.methodName}@${traceFile}:${trace.lineNumber - (traceFile.endsWith(".html") ? 30 : 0)}:${trace.column}`;
+        let d = new Date();
+        let dateStr = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}.${d.getMilliseconds().toString().padStart("3", "0")}`;
+        logs.push({ time: dateStr, type: msg.data.type == "jserror" ? "error" : msg.data.type, data: str, trace: traceStr });
     }
 });
 
@@ -212,9 +229,10 @@ function createSite() {
     }
 }
 
-function createBlobURL(blob) {
+function createBlobURL(blob, filename) {
     let url = URL.createObjectURL(blob);
     blobURLS.push(url);
+    originalURLS.push(filename ?? "unknown");
     // console.log("creating blob", blob)
     return url;
 }
@@ -226,12 +244,13 @@ function revokeOldURLS() {
         blobURLS.shift();
         URL.revokeObjectURL(blobURLS[0]);
     }
+    originalURLS = [];
     // console.log("done")
 }
 
 function loadPage(path, setPreview = false) {
     revokeOldURLS();
-    logs = []
+    logs = [];
     if (setPreview) {
         previewPage = path;
         console.log(path, previewPage);
@@ -269,48 +288,54 @@ function loadPage(path, setPreview = false) {
                 } else {
                     fileBlob = new Blob([files[el.getAttribute(attr)]], { type: el.getAttribute(attr).endsWith(".css") ? "text/css" : el.getAttribute(attr).endsWith(".js") ? "application/javascript" : "text/html" });
                 }
-                el[attr] = createBlobURL(fileBlob);
+                if (el.tagName == "SCRIPT") {
+                    el[attr] = createBlobURL(fileBlob, el.getAttribute(attr));
+                } else {
+                    el[attr] = createBlobURL(fileBlob);
+                }
             }
         }
     }
-    let consoleOverrideScript = `/*(function(oldCons){
-        return {
-            log: function() {
-                // oldCons.log.apply(arguments);
-                window.top.postMessage({"action": "console", "type": "log", "data": arguments}, "*")
-            },
-            info: function () {
-                // oldCons.info.apply(arguments);
-                window.top.postMessage({"action": "console", "type": "info", "data": arguments}, "*")
-            },
-            warn: function () {
-                // oldCons.warn.apply(arguments);
-                window.top.postMessage({"action": "console", "type": "warn", "data": arguments}, "*")
-            },
-            error: function () {
-                // oldCons.error.apply(arguments);
-                window.top.postMessage({"action": "console", "type": "error", "data": arguments}, "*")
-            }
-        };
-})(window.console);*/
+    let consoleOverrideScript = `
+    // import * as stackTraceParser from 'https://cdn.jsdelivr.net/npm/stacktrace-parser@0.1.11/+esm';
+    // stack trace parser
+    var e="<unknown>";function n(n){return n.split("\\n").reduce((function(n,o){var m=function(n){var u=l.exec(n);if(!u)return null;var t=u[2]&&0===u[2].indexOf("native"),a=u[2]&&0===u[2].indexOf("eval"),i=r.exec(u[2]);a&&null!=i&&(u[2]=i[1],u[3]=i[2],u[4]=i[3]);return{file:t?null:u[2],methodName:u[1]||e,arguments:t?[u[2]]:[],lineNumber:u[3]?+u[3]:null,column:u[4]?+u[4]:null}}(o)||function(n){var l=u.exec(n);if(!l)return null;return{file:l[2],methodName:l[1]||e,arguments:[],lineNumber:+l[3],column:l[4]?+l[4]:null}}(o)||function(n){var l=t.exec(n);if(!l)return null;var r=l[3]&&l[3].indexOf(" > eval")>-1,u=a.exec(l[3]);r&&null!=u&&(l[3]=u[1],l[4]=u[2],l[5]=null);return{file:l[3],methodName:l[1]||e,arguments:l[2]?l[2].split(","):[],lineNumber:l[4]?+l[4]:null,column:l[5]?+l[5]:null}}(o)||function(n){var l=c.exec(n);if(!l)return null;return{file:l[2],methodName:l[1]||e,arguments:[],lineNumber:+l[3],column:l[4]?+l[4]:null}}(o)||function(n){var l=i.exec(n);if(!l)return null;return{file:l[3],methodName:l[1]||e,arguments:[],lineNumber:+l[4],column:l[5]?+l[5]:null}}(o);return m&&n.push(m),n}),[])}var l=/^\\s*at (.*?) ?\\(((?:file|https?|blob|chrome-extension|native|eval|webpack|rsc|<anonymous>|\\/|[a-z]:\\\\|\\\\\\\\).*?)(?::(\\d+))?(?::(\\d+))?\\)?\\s*$/i,r=/\\((\\S*)(?::(\\d+))(?::(\\d+))\\)/;var u=/^\\s*at (?:((?:\\[object object\\])?.+) )?\\(?((?:file|ms-appx|https?|webpack|rsc|blob):.*?):(\\d+)(?::(\\d+))?\\)?\\s*$/i;var t=/^\\s*(.*?)(?:\\((.*?)\\))?(?:^|@)((?:file|https?|blob|chrome|webpack|rsc|resource|\\[native).*?|[^@]*bundle)(?::(\\d+))?(?::(\\d+))?\\s*$/i,a=/(\\S+) line (\\d+)(?: > eval line \\d+)* > eval/i;var i=/^\\s*(?:([^@]*)(?:\\((.*?)\\))?@)?(\\S.*?):(\\d+)(?::(\\d+))?\\s*$/i;var c=/^\\s*at (?:((?:\\[object object\\])?[^\\\\/]+(?: \\[as \\S+\\])?) )?\\(?(.*?):(\\d+)(?::(\\d+))?\\)?\\s*$/i;window.parseStackTrace=n;
 
-if (window.console && console) {
+    var getStackTrace = function() {
+        var obj = {};
+        Error.captureStackTrace(obj, getStackTrace);
+        // return stackTraceParser.parse(obj.stack);
+        return parseStackTrace(obj.stack);
+        // return Error().stack.toString()
+    };
+    
+    // override console
+    if (window.console && console) {
     for (let c in console) {
         if (typeof console[c] === 'function') {
             const cx = console[c]
             console[c] = function () {
-                window.top.postMessage({"action": "console", "type": c.toString(), "data": JSON.parse(JSON.stringify(arguments))}, "*")
+                window.top.postMessage({"action": "console", "type": c.toString(), "data": JSON.parse(JSON.stringify(arguments)), "trace": getStackTrace()}, "*")
                 cx.apply(this, [...arguments])
+                // cx.apply(this, [getStackTrace()])
             }
         }
     }
-}`
-    let s = document.createElement("script")
-    s.innerHTML = consoleOverrideScript
+    
+    // global error handler
+    window.onerror = function (message, file, line, col, error) {
+        // alert("Error occurred: " + error.message);
+        window.top.postMessage({"action": "console", "type": "jserror", "data": message, "trace": {methodName: "<unknown>", file: file, lineNumber: line, column: col}}, "*")
+        return false;
+    };
+}`;
+    let s = document.createElement("script");
+    s.innerHTML = consoleOverrideScript;
+    // s.type = "module";
     var node = dom.doctype;
     var doctypeString = dom.doctype ? "<!DOCTYPE " + node.name + (node.publicId ? ' PUBLIC "' + node.publicId + '"' : "") + (!node.publicId && node.systemId ? " SYSTEM" : "") + (node.systemId ? ' "' + node.systemId + '"' : "") + ">" : "";
-    dom.body.appendChild(s)
-    document.querySelector("#preview").src = createBlobURL(new Blob([doctypeString + dom.documentElement.outerHTML], { type: "text/html" }));
+    dom.body.insertBefore(s, dom.body.firstChild);
+    document.querySelector("#preview").src = createBlobURL(new Blob([doctypeString + dom.documentElement.outerHTML], { type: "text/html" }), path);
 }
 
 function saveFile() {
@@ -513,7 +538,7 @@ async function handleDeploy(e) {
         document.querySelector(".deployButton").dataset.disabled = false;
         document.querySelector("#deploy-text").innerText = "Save Changes";
         if (response.ok) {
-            settings.unsavedChanges = false
+            settings.unsavedChanges = false;
             toast("Site updated successfully");
             if (siteName != newName) {
                 siteName = newName;
@@ -704,26 +729,32 @@ function openSettings() {
 function viewLogs() {
     Swal.fire({
         title: "Preview Console Logs",
-        html: `<textarea id="logs" readonly style="width: 90%; height: 200px;">`,
+        // html: `<textarea id="logs" readonly style="width: 99%; height: 300px; resize: none;">`,
+        html: `<div id="logs" style="width: 99%; height: 300px; text-align: left; font-family: monospace; font-size: 16px;"></div>`,
+        width: 950,
+        height: 500,
         didOpen: () => {
-            let logsEl = document.querySelector("#logs")
-            let allowed = [
-                "log",
-                "warn",
-                "info",
-                "error"
-            ]
+            let logsEl = document.querySelector("#logs");
+            let allowed = ["log", "warn", "info", "error"];
             for (let log of logs) {
                 if (allowed.includes(log.type)) {
-                    let d
+                    let d;
                     try {
-                        d = JSON.stringify(log.data)
+                        d = JSON.stringify(log.data);
                     } catch {
-                        d = log.data
+                        d = log.data;
                     }
-                    logsEl.value += `${log.time} — ${log.type} — ${d}\n`
+                    // logsEl.value += `${log.time} — ${log.trace} — ${log.type} — ${d}\n`;
+                    let newEl = document.createElement("div");
+                    newEl.innerText += `${log.time} — ${log.trace} — ${log.type} — ${d}`;
+                    if (log.type == "warn") {
+                        newEl.style.backgroundColor = "#fffbd6";
+                    } else if (log.type == "error") {
+                        newEl.style.backgroundColor = "#fcebeb";
+                    }
+                    logsEl.appendChild(newEl);
                 }
             }
-        }
-    })
+        },
+    });
 }

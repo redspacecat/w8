@@ -58,7 +58,14 @@
         </div>
         <div class="slider" style="position: absolute;left: calc(65% - 3px);height: calc(100vh - 50px);">
             S<br>l<br>i<br>d<br>e<br>r</div>
-        <iframe id="preview"></iframe>
+        <div id="preview-manage">
+            <div id="preview-manage-container">
+                <button id="logs-button" title="View console logs" onclick="viewLogs()">View Console Logs</button>
+            </div>
+            <div id="preview-container">
+            <iframe id="preview"></iframe>
+            </div>
+        </div>
     </div>
 
     <script>

@@ -80,7 +80,11 @@ window.addEventListener("message", function (msg, origin) {
         } else {
             str = "";
             for (let value of Object.values(msg.data.data)) {
-                str += value;
+                if (typeof value == "object") {
+                    str += JSON.stringify(value);
+                } else {
+                    str += value;
+                }
                 str += " ";
             }
             str = str.slice(0, str.length - 1);
@@ -90,7 +94,7 @@ window.addEventListener("message", function (msg, origin) {
         // console.log(originalURLS, blobURLS, trace.file, traceFile);
         let traceStr = `${trace.methodName}@${traceFile}:${trace.lineNumber - (traceFile.endsWith(".html") ? 30 : 0)}:${trace.column}`;
         let d = new Date();
-        let dateStr = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}.${d.getMilliseconds().toString().padStart("3", "0")}`;
+        let dateStr = `${d.getHours().toString().padStart("2", "0")}:${d.getMinutes().toString().padStart("2", "0")}:${d.getSeconds().toString().padStart("2", "0")}.${d.getMilliseconds().toString().padStart("3", "0")}`;
         logs.push({ time: dateStr, type: msg.data.type == "jserror" ? "error" : msg.data.type, data: str, trace: traceStr });
     }
 });
@@ -383,7 +387,7 @@ function getProp(el, prop) {
 function handleSliders() {
     let block = document.querySelector("#editor");
     let block2 = document.querySelector("#files");
-    let preview = document.querySelector("#preview");
+    let preview = document.querySelector("#preview-manage");
     let slider = document.querySelector(".slider");
     let slider2 = document.querySelector(".slider2");
 
@@ -720,11 +724,13 @@ function openSettings() {
         title: "Manage",
         html: `<h3>Preview</h3><span>Preview update delay in miliseconds</span><br>
         <input type="range" min="0" max="2000" value=${updatePreviewWaitTime} oninput="updatePreviewWaitTime = this.value;this.nextElementSibling.nextElementSibling.innerText = 'Current: ' + updatePreviewWaitTime + ' milliseconds'"><br><span>Current: ${updatePreviewWaitTime} milliseconds</span>
-        <br><button class="logsButton" onclick="viewLogs()">View Console Logs</button><br><h3>Manage Site</h3><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>
+        <br><h3>Manage Site</h3><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>
         `,
         confirmButtonText: "Done",
     });
 }
+
+// <br><button class="logsButton" onclick="viewLogs()">View Console Logs</button>
 
 function viewLogs() {
     Swal.fire({
@@ -732,21 +738,22 @@ function viewLogs() {
         // html: `<textarea id="logs" readonly style="width: 99%; height: 300px; resize: none;">`,
         html: `<div id="logs" style="width: 99%; height: 300px; text-align: left; font-family: monospace; font-size: 16px;"></div>`,
         width: 950,
-        height: 500,
         didOpen: () => {
             let logsEl = document.querySelector("#logs");
             let allowed = ["log", "warn", "info", "error"];
             for (let log of logs) {
                 if (allowed.includes(log.type)) {
-                    let d;
-                    try {
-                        d = JSON.stringify(log.data);
-                    } catch {
-                        d = log.data;
-                    }
                     // logsEl.value += `${log.time} — ${log.trace} — ${log.type} — ${d}\n`;
                     let newEl = document.createElement("div");
-                    newEl.innerText += `${log.time} — ${log.trace} — ${log.type} — ${d}`;
+                    let typeStr = "";
+                    if (log.type == "error") {
+                        typeStr = "❌";
+                    } else if (log.type == "warn") {
+                        typeStr = "⚠️";
+                    } else {
+                        typeStr = "ℹ️";
+                    }
+                    newEl.innerText += `${typeStr} [${log.time}] ${log.trace} — ${log.data}`;
                     if (log.type == "warn") {
                         newEl.style.backgroundColor = "#fffbd6";
                     } else if (log.type == "error") {

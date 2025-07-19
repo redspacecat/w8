@@ -18,17 +18,9 @@ body {
 }
 
 #preview {
-    border: 2px solid rgb(80, 80, 80);
-    border-left: none;
-    width: 35%;
-    height: calc(100vh - 50px - 4px);
-
-    flex: 1;
-    /* adjust automatically */
-    min-width: 0;
-    /* allow flexing beyond auto width */
-    overflow: hidden;
-    /* hide overflow on small width */
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 #files {
@@ -364,7 +356,6 @@ body {
     filter: invert(0%) sepia(79%) saturate(12%) hue-rotate(232deg) brightness(96%) contrast(103%);
 }
 
-
 .logsButton {
     font-size: 1rem;
     font-weight: 500;
@@ -397,4 +388,37 @@ body {
 .logsButton:hover {
     background-color: #0a2c0e;
     /* Darker green on hover */
+}
+
+#logs-button {
+    background-color: #124117;
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    margin-left: 3px;
+    color: white;
+}
+
+#logs-button:hover {
+    background-color: #0a2c0e;
+}
+
+#preview-manage {
+    width: 35%;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#preview-manage-container {
+    height: 28px;
+    border-top: 2px solid black;
+    align-items: center;
+    display: flex;
+}
+
+#preview-container {
+    border-top: 2px solid black;
+    height: calc(100% - 34px);
+    border-bottom: 2px solid black;
 }

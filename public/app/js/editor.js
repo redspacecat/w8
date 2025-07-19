@@ -23,6 +23,7 @@ let previewPage = currentFile;
 let blobURLS = [];
 let updatePreviewTimeout;
 let updatePreviewWaitTime = 400;
+let logs = []
 
 const beforeUnloadHandler = (event) => {
     // Recommended
@@ -65,6 +66,15 @@ window.addEventListener("message", function (msg, origin) {
     console.log(msg, origin);
     if (msg.data.l) {
         loadPage(msg.data.l, true);
+    } else if (msg.data.action == "console") {
+        console.log("message from iframe console", msg.data.type, msg.data.data)
+        let str = ""
+        for (let value of Object.values(msg.data.data)) {
+            str += value
+            str += " "
+        }
+        str = str.slice(0, str.length - 1)
+        logs.push({time: new Date().toLocaleString(), type: msg.data.type, data: str})
     }
 });
 
@@ -221,6 +231,7 @@ function revokeOldURLS() {
 
 function loadPage(path, setPreview = false) {
     revokeOldURLS();
+    logs = []
     if (setPreview) {
         previewPage = path;
         console.log(path, previewPage);
@@ -262,8 +273,43 @@ function loadPage(path, setPreview = false) {
             }
         }
     }
+    let consoleOverrideScript = `/*(function(oldCons){
+        return {
+            log: function() {
+                // oldCons.log.apply(arguments);
+                window.top.postMessage({"action": "console", "type": "log", "data": arguments}, "*")
+            },
+            info: function () {
+                // oldCons.info.apply(arguments);
+                window.top.postMessage({"action": "console", "type": "info", "data": arguments}, "*")
+            },
+            warn: function () {
+                // oldCons.warn.apply(arguments);
+                window.top.postMessage({"action": "console", "type": "warn", "data": arguments}, "*")
+            },
+            error: function () {
+                // oldCons.error.apply(arguments);
+                window.top.postMessage({"action": "console", "type": "error", "data": arguments}, "*")
+            }
+        };
+})(window.console);*/
+
+if (window.console && console) {
+    for (let c in console) {
+        if (typeof console[c] === 'function') {
+            const cx = console[c]
+            console[c] = function () {
+                window.top.postMessage({"action": "console", "type": c.toString(), "data": JSON.parse(JSON.stringify(arguments))}, "*")
+                cx.apply(this, [...arguments])
+            }
+        }
+    }
+}`
+    let s = document.createElement("script")
+    s.innerHTML = consoleOverrideScript
     var node = dom.doctype;
     var doctypeString = dom.doctype ? "<!DOCTYPE " + node.name + (node.publicId ? ' PUBLIC "' + node.publicId + '"' : "") + (!node.publicId && node.systemId ? " SYSTEM" : "") + (node.systemId ? ' "' + node.systemId + '"' : "") + ">" : "";
+    dom.body.appendChild(s)
     document.querySelector("#preview").src = createBlobURL(new Blob([doctypeString + dom.documentElement.outerHTML], { type: "text/html" }));
 }
 
@@ -646,11 +692,38 @@ async function prettify() {
 
 function openSettings() {
     Swal.fire({
-        title: "Settings",
-        html: `<span>Preview delay in miliseconds</span><br>
+        title: "Manage",
+        html: `<h3>Preview</h3><span>Preview update delay in miliseconds</span><br>
         <input type="range" min="0" max="2000" value=${updatePreviewWaitTime} oninput="updatePreviewWaitTime = this.value;this.nextElementSibling.nextElementSibling.innerText = 'Current: ' + updatePreviewWaitTime + ' milliseconds'"><br><span>Current: ${updatePreviewWaitTime} milliseconds</span>
-        <br><br><span>Manage Site</span><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>
+        <br><button class="logsButton" onclick="viewLogs()">View Console Logs</button><br><h3>Manage Site</h3><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>
         `,
         confirmButtonText: "Done",
     });
+}
+
+function viewLogs() {
+    Swal.fire({
+        title: "Preview Console Logs",
+        html: `<textarea id="logs" readonly style="width: 90%; height: 200px;">`,
+        didOpen: () => {
+            let logsEl = document.querySelector("#logs")
+            let allowed = [
+                "log",
+                "warn",
+                "info",
+                "error"
+            ]
+            for (let log of logs) {
+                if (allowed.includes(log.type)) {
+                    let d
+                    try {
+                        d = JSON.stringify(log.data)
+                    } catch {
+                        d = log.data
+                    }
+                    logsEl.value += `${log.time} — ${log.type} — ${d}\n`
+                }
+            }
+        }
+    })
 }

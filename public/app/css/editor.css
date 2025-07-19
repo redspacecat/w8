@@ -363,3 +363,38 @@ body {
     transition: 1s;
     filter: invert(0%) sepia(79%) saturate(12%) hue-rotate(232deg) brightness(96%) contrast(103%);
 }
+
+
+.logsButton {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #124117;
+    border: none;
+    border-radius: 5px;
+    height: 40px;
+    /* Match height of newFile button */
+    padding: 0 15px;
+    /* Add horizontal padding */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* margin-left: 10px; */
+    /* Pushes the button to the far right within its flex container */
+    /* margin-right: 10px; */
+    /* Add some right margin */
+    text-decoration: none;
+    font-weight: normal;
+    /* visibility: hidden; */
+    /* display: none; */
+    width: fit-content;
+    margin: 0 auto;
+    margin-top: 15px;
+}
+
+.logsButton:hover {
+    background-color: #0a2c0e;
+    /* Darker green on hover */
+}

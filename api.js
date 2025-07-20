@@ -18,10 +18,10 @@ api.getSite = async function (request, reply) {
     let siteName = request.params.name;
     // let sitePath = request.url.slice(siteName.length + 3);
     let sitePath = request.urlData("path").slice(siteName.length + 3);
-    if (sitePath == "") {
+    // if (sitePath == "") {
         // sitePath = "/"
-        return reply.redirect(`/s/${siteName}/`);
-    }
+        // return reply.redirect(`/s/${siteName}/`);
+    // }
     console.log("siteName", siteName);
     console.log("sitePath", sitePath);
     // reply.send(sitePath)
@@ -142,21 +142,22 @@ api.getSite = async function (request, reply) {
 
 function returnPage(b, type, path) {
     let cacheControl = b.request.query.new == "true" ? "no-cache" : "max-age=604800";
-    if (type == "text/html") {
-        let dom = new JSDOM(b.pages[path]);
-        let els = dom.window.document.querySelectorAll("link, a, script");
-        for (let el of els) {
-            let attr = el.tagName == "SCRIPT" ? "src" : "href";
-            if (el[attr]) {
-                if (el.getAttribute(attr).startsWith("/")) {
-                    el.setAttribute(attr, `/s/${b.siteName}${el.getAttribute(attr)}`);
-                }
-            }
-        }
-        b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(dom.serialize());
-    } else {
-        b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
-    }
+    // if (type == "text/html") {
+    //     let dom = new JSDOM(b.pages[path]);
+    //     let els = dom.window.document.querySelectorAll("link, a, script");
+    //     for (let el of els) {
+    //         let attr = el.tagName == "SCRIPT" ? "src" : "href";
+    //         if (el[attr]) {
+    //             if (el.getAttribute(attr).startsWith("/")) {
+    //                 el.setAttribute(attr, `/s/${b.siteName}${el.getAttribute(attr)}`);
+    //             }
+    //         }
+    //     }
+    //     b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(dom.serialize());
+    // } else {
+    //     b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
+    // }
+    b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);   
 }
 
 api.page = function (p) {

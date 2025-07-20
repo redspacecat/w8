@@ -7,6 +7,7 @@
     "@fastify/url-data": "^6.0.3",
     "@fastify/view": "11.1.0",
     "@supabase/supabase-js": "^2.50.2",
+    "@vercel/functions": "^2.2.4",
     "fastify": "5.4.0",
     "handlebars": "^4.7.8",
     "jsdom": "^26.1.0"

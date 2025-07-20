@@ -161,8 +161,7 @@ function returnPage(b, type, path) {
 
 api.page = function (p) {
     return function (request, reply) {
-        let params = {};
-        return reply.view(`/${p}.hbs`, params);
+        return reply.view(`/${p}.html`);
     };
 };
 

@@ -23,7 +23,7 @@ async function main() {
         engine: {
             handlebars: require("handlebars"),
         },
-        root: path.join(__dirname, "views"),
+        root: path.join(__dirname, "pages"),
     });
 
     // app.register(require('@fastify/formbody'))
@@ -39,7 +39,7 @@ async function main() {
         if (!Object.keys(request.query).includes("edit")) {
             return reply.redirect("/")
         } else {
-            return reply.view("/editor.hbs", {})
+            return reply.view("/editor.html")
         }
     });
     app.get("/app/create", api.page("deploy"))

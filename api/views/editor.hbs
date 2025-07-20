@@ -60,7 +60,11 @@
             S<br>l<br>i<br>d<br>e<br>r</div>
         <div id="preview-manage">
             <div id="preview-manage-container">
-                <button id="logs-button" title="View console logs" onclick="viewLogs()">View Console Logs</button>
+                <button id="logs-button" title="View console logs" onclick="viewLogs()">
+                    <span>View Console Logs</span>
+                    <span style="margin-left: 5px;background-color: green;padding: 2px 5px;border-radius: 5px;" id="logs-amount" data-amount="0">0</span>
+                </button>
+                <button id="show-preview" onclick="window.open(document.querySelector('#preview').src)">Open Preview<img src="/app/images/new-tab.png" style="width: 20px; height: 20px"></button>
             </div>
             <div id="preview-container">
             <iframe id="preview"></iframe>

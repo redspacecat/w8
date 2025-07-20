@@ -96,6 +96,8 @@ window.addEventListener("message", function (msg, origin) {
         let d = new Date();
         let dateStr = `${d.getHours().toString().padStart("2", "0")}:${d.getMinutes().toString().padStart("2", "0")}:${d.getSeconds().toString().padStart("2", "0")}.${d.getMilliseconds().toString().padStart("3", "0")}`;
         logs.push({ time: dateStr, type: msg.data.type == "jserror" ? "error" : msg.data.type, data: str, trace: traceStr });
+        // document.querySelector("#logs-amount").dataset.amount = logs.length;
+        document.querySelector("#logs-amount").innerText = logs.length;
     }
 });
 
@@ -259,6 +261,8 @@ function loadPage(path, setPreview = false) {
         previewPage = path;
         console.log(path, previewPage);
     }
+    // document.querySelector("#logs-amount").dataset.amount = "0";
+    document.querySelector("#logs-amount").innerText = "0";
     let file = files[path];
     let dom = new DOMParser().parseFromString(file, "text/html");
     let els = dom.querySelectorAll("link, a, script");
@@ -734,10 +738,11 @@ function openSettings() {
 
 function viewLogs() {
     Swal.fire({
-        title: "Preview Console Logs",
+        title: "Console Logs",
         // html: `<textarea id="logs" readonly style="width: 99%; height: 300px; resize: none;">`,
         html: `<div id="logs" style="width: 99%; height: 300px; text-align: left; font-family: monospace; font-size: 16px;"></div>`,
         width: 950,
+        confirmButtonText: "Done",
         didOpen: () => {
             let logsEl = document.querySelector("#logs");
             let allowed = ["log", "warn", "info", "error"];

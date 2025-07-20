@@ -422,3 +422,18 @@ body {
     height: calc(100% - 34px);
     border-bottom: 2px solid black;
 }
+
+/* #logs-amount[data-amount="0"] {
+    display: none;
+} */
+
+#show-preview {
+    background-color: rgb(187, 200, 227);
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    margin-left: 3px;
+    height: calc(100% - 4px);
+    display: flex;
+    align-items: center;
+}

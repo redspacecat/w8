@@ -5,21 +5,30 @@ export default function middleware(request) {
     const hostname = request.headers.get("host");
     console.log(url, hostname);
 
-    if (hostname != "w8.quuq.dev" && !hostname.endsWith(".vercel.app") && !hostname.endsWith("localhost:3000")) {
-        const newHost = hostname.replace(".w8.quuq.dev", "");
-        const finalURL = `/s/${newHost}${url.pathname}?rewrote=true`;
+    let siteHost = process.env.PROD_SITE_HOSTNAME
+    let siteProtocol = "https://"
+    let sitePort = ""
+    if (process.env.NODE_ENV == "development") {
+        console.log('hi')
+        siteHost = "localhost"
+        sitePort = ":3000"
+        siteProtocol = "http://"
+    }
+    console.log(siteHost, sitePort)
+    if (hostname != siteHost && !hostname.endsWith(".vercel.app") && !hostname.endsWith(".localhost")) {
+        const newHost = hostname.replace(`.${siteHost + sitePort}`, "");
+        const finalURL = `/s/${newHost}${url.pathname}?${process.env.MIDDLEWARE_REWRITE_TOKEN}=true`;
         console.log(finalURL);
-        return rewrite("https://w8.quuq.dev" + finalURL);
+        return rewrite(siteProtocol + siteHost + sitePort + finalURL);
     } else {
         console.log("host", hostname);
-        if (url.searchParams.has("rewrote")) {
+        if (url.searchParams.has(process.env.MIDDLEWARE_REWRITE_TOKEN)) {
             console.log("request has already been rewritten");
         } else {
             if (url.pathname.startsWith("/s/") && url.pathname.slice(3).length > 0) {
                 console.log("request has not been rewritten already");
                 console.log("redirecting to 404");
-                url.pathname = "/404"
-                return Response.redirect(url);
+                return Response.redirect(new URL(url.origin + "/404"));
             }
         }
         console.log("doing nothing");

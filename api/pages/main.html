@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,14 +11,48 @@
     <script src="/js/home.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
     <h2>Welcome to w8 hosting, where you can host your static sites for free!</h2>
-    <p>Note: This doesn't include images. Those will have to be hosted elsewhere.</p>
+    <p>Note: This doesn't include images. Those will have to be hosted elsewhere. We recommend a free image hosting
+        service such as <a href="https://imgbb.com">ImgBB</a> or other similar websites.</p>
     <p>This is a work in progress.</p>
 
     <div id="createContainer">
         <a href="/create"><button id="createSite">Create a site</button></a>
         <a href="/editor?edit"><button id="createSite">Edit a site</button></a>
+        <br><br>
+        <a href="https://example.w8.quuq.dev" target="_blank">View an example site<img src="/images/new-tab.png" style="width: 20px; height: 20px"></a>
+    </div>
+    <br>
+    <div style="display: flex">
+        <div style="width: 50%;margin-right: 20px">
+            <h2>Features</h2>
+            <ul>
+                <li>Fully fledged editor</li>
+                <ul>
+                    <li>Easy to use code editor for multiple file types</li>
+                    <li>Add multiple files</li>
+                    <li>Live preview of website</li>
+                    <ul>
+                        <li>Fullscreen support</li>
+                        <li>Fetch support</li>
+                        <li>Comprehensive console and error logging for easy debugging</li>
+                    </ul>
+                    <li>Code prettification</li>
+                    <li>Folder structure for easier managing of files</li>
+                </ul>
+                <li>Save and edit your sites later easily</li>
+                <li>Upload multiple sites</li>
+                <li>Use editor with or without creating a site</li>
+            </ul>
+            <div></div>
+        </div>
+        <div style="width: 50%;">
+            <h2>Featured Site — <a href="https://spectacular-spanish.w8.quuq.dev" target="_blank">spectacular-spanish <img src="/images/new-tab.png" style="width: 20px; height: 20px"></a></h2>
+            <iframe src="https://spectacular-spanish.w8.quuq.dev" style="width: 100%;height: 300px;border: 2px solid darkslategray;border-radius: 10px;"></iframe>
+        </div>
     </div>
 </body>
+
 </html>

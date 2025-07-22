@@ -552,7 +552,7 @@ async function handleDeploy(e) {
                 siteName = newName;
                 Swal.fire({
                     icon: "success",
-                    html: `Your site has been updated! You can find the updated version at <a target="_blank" href="https://${escapeHtml(newName)}.${location.hostname}">https://${escapeHtml(newName)}.${location.hostname}`,
+                    html: `Your site has been updated! You can find the updated version at <a target="_blank" href="https://${escapeHtml(newName)}.${location.host}">https://${escapeHtml(newName)}.${location.host}`,
                 });
             }
         } else {
@@ -678,7 +678,7 @@ async function renameFile() {
 
 function viewSite(e) {
     e.preventDefault();
-    window.open(`https://${siteName}.${location.hostname}`);
+    window.open(`https://${siteName}.${location.host}`);
 }
 
 function toast(msg) {

@@ -30,11 +30,11 @@
         <input id="site-name" placeholder="Your site name..." value="" style="font-size: large"
             pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');settings.unsavedChanges = true;" maxlength="40">
         <img src="/images/settings2.svg" onclick="openSettings()" id="settingsButton">
-        <a href="/view" class="viewButton" title="View this site in a new tab">View Site</a>
-        <a href="/deploy" class="deployButton" title="Deploy/save site">
+        <button class="viewButton" title="View this site in a new tab">View Site</button>
+        <button class="deployButton" title="Deploy/save site">
             <span class="loader" id="deploy-loader" style="display: none;"></span>
             <span id="deploy-text">Save Changes</span>
-        </a>
+        </button>
     </div>
 
     <div id="wrapper">

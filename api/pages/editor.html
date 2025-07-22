@@ -29,9 +29,9 @@
         <span style="font-size: large;margin-right: 10px;"><a href="/">w8</a> | Create Your Site</span>
         <input id="site-name" placeholder="Your site name..." value="" style="font-size: large"
             pattern="[a-zA-Z0-9_\-]*" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\-]/g, '');settings.unsavedChanges = true;" maxlength="40">
-        <img src="/app/images/settings2.svg" onclick="openSettings()" id="settingsButton">
-        <a href="/app/view" class="viewButton" title="View this site in a new tab">View Site</a>
-        <a href="/app/deploy" class="deployButton" title="Deploy/save site">
+        <img src="/images/settings2.svg" onclick="openSettings()" id="settingsButton">
+        <a href="/view" class="viewButton" title="View this site in a new tab">View Site</a>
+        <a href="/deploy" class="deployButton" title="Deploy/save site">
             <span class="loader" id="deploy-loader" style="display: none;"></span>
             <span id="deploy-text">Save Changes</span>
         </a>
@@ -63,7 +63,7 @@
                     <span>View Console Logs</span>
                     <span style="margin-left: 5px;background-color: green;padding: 2px 5px;border-radius: 5px;" id="logs-amount" data-amount="0">0</span>
                 </button>
-                <button id="show-preview" onclick="window.open(document.querySelector('#preview').src)">Open Preview<img src="/app/images/new-tab.png" style="width: 20px; height: 20px"></button>
+                <button id="show-preview" onclick="window.open(document.querySelector('#preview').src)">Open Preview<img src="/images/new-tab.png" style="width: 20px; height: 20px"></button>
             </div>
             <div id="preview-container">
             <iframe id="preview"></iframe>

@@ -167,7 +167,7 @@ async function setup() {
                 let pass = window.sitePass || document.querySelector("#password").value;
                 window.sitePass = pass;
                 console.log("okay");
-                let response = await fetch("/app/edit", {
+                let response = await fetch("/edit", {
                     method: "POST",
                     body: JSON.stringify({
                         action: "check",
@@ -502,8 +502,8 @@ async function handleDeploy(e) {
     if (document.querySelector(".deployButton").dataset.disabled == "true") {
         return;
     }
-    // submitPost("/app/deploy", {name: document.querySelector("#site-name").value, data: JSON.stringify(files)})
-    // let deployWindow = window.open("/app/deploy", "_blank")
+    // submitPost("/deploy", {name: document.querySelector("#site-name").value, data: JSON.stringify(files)})
+    // let deployWindow = window.open("/deploy", "_blank")
     // deployWindow.addEventListener("DOMContentLoaded", function() {
     //     deployWindow.document.getElementById("name").innerText = document.querySelector("#site-name").value
     //     deployWindow.document.getElementById("files").innerText = JSON.stringify(files)
@@ -528,7 +528,7 @@ async function handleDeploy(e) {
         }
         document.querySelector("#deploy-text").innerText = "Saving...";
         document.querySelector(".deployButton").dataset.disabled = true;
-        let response = await fetch("/app/edit", {
+        let response = await fetch("/edit", {
             method: "POST",
             body: JSON.stringify({
                 action: "deploy",
@@ -564,7 +564,7 @@ async function handleDeploy(e) {
         }
     } else {
         window.open(
-            `/app/deploy#${URL.createObjectURL(new Blob([JSON.stringify({ files: files, name: document.querySelector("#site-name").value })], { type: "application/json" }))
+            `/deploy#${URL.createObjectURL(new Blob([JSON.stringify({ files: files, name: document.querySelector("#site-name").value })], { type: "application/json" }))
                 .split("/")
                 .at(-1)}`,
             "_blank"
@@ -594,7 +594,7 @@ async function handleDelete(e) {
             icon: "question",
             showLoaderOnDeny: true,
             preDeny: async () => {
-                let response = await fetch("/app/edit", {
+                let response = await fetch("/edit", {
                     method: "POST",
                     body: JSON.stringify({
                         action: "delete",

@@ -139,7 +139,7 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
     console.log("Optional password:", password);
 
     (async function () {
-        let response = await fetch("/app/deploy", {
+        let response = await fetch("/deploy", {
             method: "POST",
             body: JSON.stringify({ name: document.querySelector("#name").value, files: files, password: password }),
             headers: {
@@ -151,9 +151,9 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
         if (response.ok) {
             console.log("Deployment process completed.");
             let n = document.querySelector("#name").value;
-            document.cookie = `sitepass=${encodeURIComponent(JSON.stringify({ name: n, pass: password }))};path=/app`;
+            document.cookie = `sitepass=${encodeURIComponent(JSON.stringify({ name: n, pass: password }))};path=/`;
             location.href = "editor?edit=" + n;
-            // alertify.alert(`Your site has been deployed successfully! You can find it at <a href='/s/${n}' style='color: blue;'>${window.location.origin}/s/${n}</a> or edit it <a href='/app/editor/?edit=${n}' style='color: blue;'>here</a>`).set({ title: "Deployment completed" }).set({ movable: false });
+            // alertify.alert(`Your site has been deployed successfully! You can find it at <a href='/s/${n}' style='color: blue;'>${window.location.origin}/s/${n}</a> or edit it <a href='/editor/?edit=${n}' style='color: blue;'>here</a>`).set({ title: "Deployment completed" }).set({ movable: false });
         } else {
             console.log("Error deploying");
             let result = await response.text();

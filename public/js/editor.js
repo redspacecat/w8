@@ -114,6 +114,13 @@ function sleep(ms) {
 async function setup() {
     let params = new URLSearchParams(location.search);
     window.edit = params.has("edit");
+    window.offline = params.has("offline");
+    if (offline) {
+        document.querySelector(".deployButton").style.display = "none"
+        document.querySelector("#site-name").hidden = true
+        document.querySelector("#settingsButton").style.marginRight = "5px"
+        document.querySelector("#top-left-text").innerHTML += " — Offline Mode"
+    }
     if (edit) {
         await sleep(50);
         if (params.get("edit")) {
@@ -594,6 +601,7 @@ async function handleDelete(e) {
             icon: "question",
             showLoaderOnDeny: true,
             preDeny: async () => {
+                settings.unsavedChanges = false
                 let response = await fetch("/edit", {
                     method: "POST",
                     body: JSON.stringify({
@@ -728,7 +736,7 @@ function openSettings() {
         title: "Manage",
         html: `<h3>Preview</h3><span>Preview update delay in miliseconds</span><br>
         <input type="range" min="0" max="2000" value=${updatePreviewWaitTime} oninput="updatePreviewWaitTime = this.value;this.nextElementSibling.nextElementSibling.innerText = 'Current: ' + updatePreviewWaitTime + ' milliseconds'"><br><span>Current: ${updatePreviewWaitTime} milliseconds</span>
-        <br><h3>Manage Site</h3><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>
+        <br>${!offline ? `<h3>Manage Site</h3><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>`:""}
         `,
         confirmButtonText: "Done",
     });
@@ -769,4 +777,8 @@ function viewLogs() {
             }
         },
     });
+}
+
+function uploadFile() {
+    alert("placeholder")
 }

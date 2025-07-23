@@ -61,17 +61,37 @@ body {
     min-width: 0px;
 }
 
-#newFile {
+/* #newFile {
     position: absolute;
     width: var(--hierarchy-width);
     height: 40px;
+} */
+
+#uploadFile {
+    width: calc(20% - 5px);
+    position: relative;
+    height: 40px;
+    margin: 5px 0px;
+    border: none;
+    background-color: #d5d5d5;
+    box-sizing: border-box;
+    border-radius: 5px;
+    /* margin-right: 10px; */
+    font-size: x-large;
+    transition: 0.25s;
+}
+
+#uploadFile:hover {
+    background-color: #bababa;
+    transition: 0.25s;
 }
 
 #newFile {
     /* Positioning and Sizing */
     position: relative;
     /* Changed from absolute for better flow within #files */
-    width: calc(100% - 10px);
+    /* width: calc(100% - 10px); */
+    width: calc(80% - 10px);
     /* Adjust width to fit with padding */
     height: 40px;
     margin: 5px;
@@ -339,7 +359,13 @@ body {
 #delete-file,
 #delete-file:hover,
 #rename-file,
-#rename-file:hover {
+#rename-file:hover,
+#prettify-file,
+#prettify-file:hover,
+#logs-button,
+#logs-button:hover,
+#show-preview,
+#show-preview:hover {
     transition: 0.25s;
 }
 
@@ -436,4 +462,8 @@ body {
     height: calc(100% - 4px);
     display: flex;
     align-items: center;
+}
+
+#show-preview:hover {
+    background-color: rgb(153, 170, 206);
 }

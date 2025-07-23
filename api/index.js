@@ -36,10 +36,11 @@ async function main() {
     });
 
     app.get("/editor", async function (request, reply) {
-        if (!Object.keys(request.query).includes("edit")) {
-            return reply.redirect("/")
-        } else {
+        let paramNames = Object.keys(request.query)
+        if (paramNames.includes("edit") || paramNames.includes("offline")) {
             return reply.view("/editor.html")
+        } else {
+            return reply.redirect("/")
         }
     });
     app.get("/create", api.page("deploy"))

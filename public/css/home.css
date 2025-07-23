@@ -10,3 +10,7 @@
 body {
     margin: 25px;
 }
+
+#offlineMode {
+    margin-top: 5px;
+}

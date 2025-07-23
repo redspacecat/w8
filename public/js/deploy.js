@@ -120,8 +120,8 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
         return; // Stop the function if validation fails
     }
     if (!document.querySelector("#acceptTerms").checkValidity()) {
-        document.querySelector("#acceptTerms").reportValidity()
-        return
+        document.querySelector("#acceptTerms").reportValidity();
+        return;
     }
 
     const deployButton = event.currentTarget;
@@ -146,8 +146,6 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
                 "Content-Type": "application/json",
             },
         });
-        loader.classList.remove("active"); // Hide the loader
-        deployButton.style.display = "block"; // Show the button (or flex/inline-block if needed)
         if (response.ok) {
             console.log("Deployment process completed.");
             let n = document.querySelector("#name").value;
@@ -155,6 +153,8 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
             location.href = "editor?edit=" + n;
             // alertify.alert(`Your site has been deployed successfully! You can find it at <a href='/s/${n}' style='color: blue;'>${window.location.origin}/s/${n}</a> or edit it <a href='/editor/?edit=${n}' style='color: blue;'>here</a>`).set({ title: "Deployment completed" }).set({ movable: false });
         } else {
+            loader.classList.remove("active"); // Hide the loader
+            deployButton.style.display = "block"; // Show the button (or flex/inline-block if needed)
             console.log("Error deploying");
             let result = await response.text();
             alertify.alert(`There was an error while deploying your site — Status code: ${response.status}, Info: ${result}`).set({ title: "Deployment failed" }).set({ movable: false });
@@ -164,10 +164,10 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
 });
 
 function updateTermsAccept() {
-    document.querySelector("#deployButton").disabled = !document.querySelector("#acceptTerms").checked
+    document.querySelector("#deployButton").disabled = !document.querySelector("#acceptTerms").checked;
 }
 
-window.addEventListener("DOMContentLoaded", function() {
-    document.querySelector("#acceptTerms").checked = false
-    updateTermsAccept()
-})
+window.addEventListener("DOMContentLoaded", function () {
+    document.querySelector("#acceptTerms").checked = false;
+    updateTermsAccept();
+});

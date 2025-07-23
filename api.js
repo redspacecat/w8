@@ -201,7 +201,7 @@ api.deploy = async function (request, reply) {
     }
     console.log("adding data", name, "with data", request.body.files);
     console.time("addSite");
-    await supabase.from("sites").insert([{ site_name: name, site_data: request.body.files, site_password: password || null }]);
+    await supabase.from("sites").insert([{ site_name: name, site_data: request.body.files, site_password: password || null, site_ip: request.headers["x-forwarded-for"]}]);
     console.log("added data for site", name);
     console.timeEnd("addSite");
     return reply.code(200).send("Done!");
@@ -271,7 +271,7 @@ api.editRequest = async function (request, reply) {
                     }
                 }
                 if (data.data[0].site_password == request.body.sitePass) {
-                    let data2 = await supabase.from("sites").update({ site_name: params.newName, site_data: params.files }).eq("site_name", params.oldName);
+                    let data2 = await supabase.from("sites").update({ site_name: params.newName, site_data: params.files, site_ip: request.headers["x-forwarded-for"] }).eq("site_name", params.oldName);
                     let dirPrepend;
                     if (process.env.NODE_ENV == "dev") {
                         dirPrepend = "";

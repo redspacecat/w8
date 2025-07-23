@@ -67,7 +67,7 @@ window.addEventListener("resize", function () {
 });
 
 window.addEventListener("message", function (msg, origin) {
-    console.log(msg, origin);
+    // console.log(msg, origin);
     if (msg.data.l) {
         loadPage(msg.data.l, true);
     } else if (msg.data.action == "console") {
@@ -116,10 +116,11 @@ async function setup() {
     window.edit = params.has("edit");
     window.offline = params.has("offline");
     if (offline) {
-        document.querySelector(".deployButton").style.display = "none"
-        document.querySelector("#site-name").hidden = true
-        document.querySelector("#settingsButton").style.marginRight = "5px"
-        document.querySelector("#top-left-text").innerHTML += " — Offline Mode"
+        document.querySelector(".deployButton").style.display = "none";
+        document.querySelector("#site-name").hidden = true;
+        document.querySelector("#settingsButton").style.marginRight = "10px";
+        document.querySelector("#top-left-text").innerHTML += " — Offline Mode";
+        window.siteName = "site";
     }
     if (edit) {
         await sleep(50);
@@ -601,7 +602,7 @@ async function handleDelete(e) {
             icon: "question",
             showLoaderOnDeny: true,
             preDeny: async () => {
-                settings.unsavedChanges = false
+                settings.unsavedChanges = false;
                 let response = await fetch("/edit", {
                     method: "POST",
                     body: JSON.stringify({
@@ -736,8 +737,10 @@ function openSettings() {
         title: "Manage",
         html: `<h3>Preview</h3><span>Preview update delay in miliseconds</span><br>
         <input type="range" min="0" max="2000" value=${updatePreviewWaitTime} oninput="updatePreviewWaitTime = this.value;this.nextElementSibling.nextElementSibling.innerText = 'Current: ' + updatePreviewWaitTime + ' milliseconds'"><br><span>Current: ${updatePreviewWaitTime} milliseconds</span>
-        <br>${!offline ? `<h3>Manage Site</h3><a class="deleteButton" onclick="handleDelete()">Delete Site</a><hr></div>`:""}
-        `,
+        <br><h3>Manage Site</h3>${!offline ? `<a class="deleteButton" onclick="handleDelete()">Delete Site</a>` : ""}
+        <input type="file" accept=".zip" id="upload-site-input" hidden onchange="uploadSite()">
+        <button class="zipSiteButton" onclick="this.previousElementSibling.click()">Import .zip as site</button>
+        <button class="zipSiteButton" onclick="downloadSite()">Export site as .zip</button><hr>`,
         confirmButtonText: "Done",
     });
 }
@@ -753,32 +756,118 @@ function viewLogs() {
         confirmButtonText: "Done",
         didOpen: () => {
             let logsEl = document.querySelector("#logs");
-            let allowed = ["log", "warn", "info", "error"];
-            for (let log of logs) {
-                if (allowed.includes(log.type)) {
-                    // logsEl.value += `${log.time} — ${log.trace} — ${log.type} — ${d}\n`;
-                    let newEl = document.createElement("div");
-                    let typeStr = "";
-                    if (log.type == "error") {
-                        typeStr = "❌";
-                    } else if (log.type == "warn") {
-                        typeStr = "⚠️";
-                    } else {
-                        typeStr = "ℹ️";
+            if (logs.length) {
+                let allowed = ["log", "warn", "info", "error"];
+                for (let log of logs) {
+                    if (allowed.includes(log.type)) {
+                        // logsEl.value += `${log.time} — ${log.trace} — ${log.type} — ${d}\n`;
+                        let newEl = document.createElement("div");
+                        let typeStr = "";
+                        if (log.type == "error") {
+                            typeStr = "❌";
+                        } else if (log.type == "warn") {
+                            typeStr = "⚠️";
+                        } else {
+                            typeStr = "ℹ️";
+                        }
+                        newEl.innerText += `${typeStr} [${log.time}] ${log.trace} — ${log.data}`;
+                        if (log.type == "warn") {
+                            newEl.style.backgroundColor = "#fffbd6";
+                        } else if (log.type == "error") {
+                            newEl.style.backgroundColor = "#fcebeb";
+                        }
+                        logsEl.appendChild(newEl);
                     }
-                    newEl.innerText += `${typeStr} [${log.time}] ${log.trace} — ${log.data}`;
-                    if (log.type == "warn") {
-                        newEl.style.backgroundColor = "#fffbd6";
-                    } else if (log.type == "error") {
-                        newEl.style.backgroundColor = "#fcebeb";
-                    }
-                    logsEl.appendChild(newEl);
                 }
+            } else {
+                logsEl.innerHTML = "<br><center>There aren't any logs yet!<br><br>Try adding a console.log() statement and then checking back here</center>";
             }
         },
     });
 }
 
-function uploadFile() {
-    alert("placeholder")
+async function uploadFile() {
+    let file = document.querySelector("#upload-file-input").files[0];
+    let name = file.name;
+    if ([".html", ".css", ".js", ".json"].some((char) => name.endsWith(char))) {
+        let text = await file.text();
+        files[name] = text;
+        createHierarchy(files);
+        toast("Loaded file " + name);
+    } else {
+        toast("Invalid file ", name)
+    }
+}
+
+async function uploadSite() {
+    let file = document.querySelector("#upload-site-input").files[0];
+    await Swal.fire({
+        icon: "question",
+        title: "Confirm override",
+        showCancelButton: true,
+        html: `Are you sure you want to replace the current site with the contents of <b>${escapeHtml(file.name)}</b>?`,
+        preConfirm: async () => {
+            const zip = await JSZip.loadAsync(await file.arrayBuffer());
+            const entries = Object.values(zip.files);
+            let fileList = [];
+            const list = entries.map(async function (entry) {
+                if (!entry.dir) {
+                    return [entry.name, await entry.async("text")];
+                }
+            });
+
+            for (let el of list) {
+                let d = await el;
+                console.log(el, d);
+                if (d) {
+                    fileList.push({ name: d[0], data: d[1] });
+                }
+            }
+            window.fileList = fileList;
+            console.log(fileList);
+            console.log("what is happening");
+
+            files = {};
+            for (let file2 of fileList) {
+                if ([".html", ".css", ".js", ".json"].some((char) => file2.name.endsWith(char))) {
+                    files[file2.name] = file2.data;
+                } else {
+                    toast("Invalid file " + file2.name);
+                }
+            }
+            createHierarchy(files);
+            currentFile = Object.keys(files)[0];
+            loadFile(currentFile);
+            toast(file.name + " loaded");
+        },
+    });
+}
+
+async function downloadSite() {
+    toast("Zipping files...");
+    let zip = new JSZip();
+    for (let name of Object.keys(files)) {
+        zip.file(name, files[name]);
+    }
+    let blob = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: {
+            level: 9,
+        },
+    });
+    const url = URL.createObjectURL(
+        new Blob([blob], {
+            type: "application/zip",
+        })
+    );
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = `${siteName ?? "site"}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast("Done!");
 }

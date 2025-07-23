@@ -179,6 +179,40 @@ body {
     /* Slight press effect when clicked */
 }
 
+.zipSiteButton {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #3d5627;
+    border: none;
+    border-radius: 5px;
+    height: 40px;
+    /* Match height of newFile button */
+    padding: 0 15px;
+    /* Add horizontal padding */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* margin-left: 10px; */
+    /* Pushes the button to the far right within its flex container */
+    /* margin-right: 10px; */
+    /* Add some right margin */
+    text-decoration: none;
+    font-weight: normal;
+    /* visibility: hidden; */
+    /* display: none; */
+    margin: 0 auto;
+    margin-top: 15px;
+    display: inline;
+}
+
+.zipSiteButton:hover {
+    background-color: rgb(33, 57, 15);
+    /* Darker red on hover */
+}
+
 .viewButton {
     font-size: 1rem;
     font-weight: 500;

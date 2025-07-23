@@ -19,8 +19,8 @@ api.getSite = async function (request, reply) {
     // let sitePath = request.url.slice(siteName.length + 3);
     let sitePath = request.urlData("path").slice(siteName.length + 3);
     // if (sitePath == "") {
-        // sitePath = "/"
-        // return reply.redirect(`/s/${siteName}/`);
+    // sitePath = "/"
+    // return reply.redirect(`/s/${siteName}/`);
     // }
     console.log("siteName", siteName);
     console.log("sitePath", sitePath);
@@ -157,7 +157,7 @@ function returnPage(b, type, path) {
     // } else {
     //     b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
     // }
-    b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);   
+    b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
 }
 
 api.page = function (p) {
@@ -178,10 +178,13 @@ api.deploy = async function (request, reply) {
     if (!request.body.name || !request.body.files) {
         return reply.code(400).send("Malformed request");
     }
+    if (!validateFileTypes(request.body.files)) {
+        return reply.code(400).send("Only .html, .css, .js, and .json file types supported");
+    }
     let name = request.body.name;
     let password = request.body.password || "";
     let siteSize = new File([slashUnescape(JSON.stringify(request.body.files))], "text/plain").size;
-    if (siteSize > 1000000) {
+    if (siteSize > 3000000) {
         return reply.code(400).send("Site too large! Max size: 1 megabyte");
     }
     if (name.length > 40 || name.length < 1) {
@@ -215,6 +218,15 @@ api.rateLimit = function (max, timeWindow) {
     };
 };
 
+function validateFileTypes(files) {
+    for (let name of Object.keys(files)) {
+        if (![".html", ".css", ".js", ".json"].some((char) => name.endsWith(char))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 api.editRequest = async function (request, reply) {
     if (!request.body.action) {
         return reply.code(400).send("Invalid");
@@ -238,10 +250,13 @@ api.editRequest = async function (request, reply) {
             if (params.newName.length > 40 || params.newName.length < 1) {
                 return reply.code(400).send("Site name length disallowed");
             }
+            if (!validateFileTypes(params.files)) {
+                return reply.code(400).send("Only .html, .css, .js, and .json file types supported");
+            }
             params.newName = params.newName.replace(/[^a-zA-Z0-9_\-]/g, "");
 
             let siteSize = new File([slashUnescape(JSON.stringify(params.files))], "text/plain").size;
-            if (siteSize > 1000000) {
+            if (siteSize > 3000000) {
                 return reply.code(400).send("Site too large! Max size: 1 megabyte");
             }
 

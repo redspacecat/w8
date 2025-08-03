@@ -272,6 +272,18 @@ function loadPage(path, setPreview = false) {
     // document.querySelector("#logs-amount").dataset.amount = "0";
     document.querySelector("#logs-amount").innerText = "0";
     let file = files[path];
+    if (!file) {
+        if (files[path + ".html"]) {
+            path = path + ".html";
+            file = files[path];
+            console.log("editing path for .html");
+        } else if (files["404.html"]) {
+            path = "404.html";
+            file = files[path];
+        } else {
+            file = '<span style="font-family: monospace, serif">404 Not Found. Add a 404 page by creating a file named "404.html"</span>';
+        }
+    }
     let dom = new DOMParser().parseFromString(file, "text/html");
     let els = dom.querySelectorAll("link, a, script");
     for (let el of els) {
@@ -795,7 +807,7 @@ async function uploadFile() {
         createHierarchy(files);
         toast("Loaded file " + name);
     } else {
-        toast("Invalid file ", name)
+        toast("Invalid file ", name);
     }
 }
 

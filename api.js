@@ -133,14 +133,16 @@ api.getSite = async function (request, reply) {
     } else if (pages[sitePath.slice(1) + ".html"]) {
         // reply.status(200).type("text/html").send(pages[sitePath + ".html"])
         return returnPage(b, "text/html", sitePath.slice(1) + ".html");
+    } else if (pages["404.html"]) {
+        return returnPage(b, "text/html", "404.html", 404)
     } else {
-        reply.status(404).send(`404 Not Found — The resource ${sitePath} was not found`);
+        reply.status(404).send(`404 Not Found — The resource ${sitePath} was not found.\nIf this is your site and you want to add a custom 404 page, create a file with the name "404.html"`);
     }
 
     reply.send(data);
 };
 
-function returnPage(b, type, path) {
+function returnPage(b, type, path, status) {
     let cacheControl = b.request.query.new == "true" ? "no-cache" : "max-age=604800";
     // if (type == "text/html") {
     //     let dom = new JSDOM(b.pages[path]);
@@ -157,7 +159,7 @@ function returnPage(b, type, path) {
     // } else {
     //     b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
     // }
-    b.reply.status(200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
+    b.reply.status(status ?? 200).type(type).header("Cache-Control", cacheControl).send(b.pages[path]);
 }
 
 api.page = function (p) {

@@ -1,3 +1,3 @@
-# w8 - Host Your Sites
+# w8 - Host your sites today!
 
-Create a site at https://w8.vercel.app/
+Create a site at https://w8.quuq.dev/

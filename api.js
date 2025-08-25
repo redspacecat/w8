@@ -183,11 +183,11 @@ api.deploy = async function (request, reply) {
     if (!validateFileTypes(request.body.files)) {
         return reply.code(400).send("Only .html, .css, .js, and .json file types supported");
     }
-    let name = request.body.name;
+    let name = request.body.name.toLowerCase();
     let password = request.body.password || "";
     let siteSize = new File([slashUnescape(JSON.stringify(request.body.files))], "text/plain").size;
     if (siteSize > 3000000) {
-        return reply.code(400).send("Site too large! Max size: 1 megabyte");
+        return reply.code(400).send("Site too large! Max size: 3 megabytes");
     }
     if (name.length > 40 || name.length < 1) {
         return reply.code(400).send("Site name length disallowed");
@@ -259,7 +259,7 @@ api.editRequest = async function (request, reply) {
 
             let siteSize = new File([slashUnescape(JSON.stringify(params.files))], "text/plain").size;
             if (siteSize > 3000000) {
-                return reply.code(400).send("Site too large! Max size: 1 megabyte");
+                return reply.code(400).send("Site too large! Max size: 3 megabytes");
             }
 
             let data = await supabase.from("sites").select().eq("site_name", request.body.oldName);

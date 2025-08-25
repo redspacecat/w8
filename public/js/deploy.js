@@ -141,14 +141,14 @@ document.getElementById("deployButton").addEventListener("click", (event) => {
     (async function () {
         let response = await fetch("/deploy", {
             method: "POST",
-            body: JSON.stringify({ name: document.querySelector("#name").value, files: files, password: password }),
+            body: JSON.stringify({ name: document.querySelector("#name").value.toLowerCase(), files: files, password: password }),
             headers: {
                 "Content-Type": "application/json",
             },
         });
         if (response.ok) {
             console.log("Deployment process completed.");
-            let n = document.querySelector("#name").value;
+            let n = document.querySelector("#name").value.toLowerCase();
             document.cookie = `sitepass=${encodeURIComponent(JSON.stringify({ name: n, pass: password }))};path=/`;
             location.href = "editor?edit=" + n;
             // alertify.alert(`Your site has been deployed successfully! You can find it at <a href='/s/${n}' style='color: blue;'>${window.location.origin}/s/${n}</a> or edit it <a href='/editor/?edit=${n}' style='color: blue;'>here</a>`).set({ title: "Deployment completed" }).set({ movable: false });
